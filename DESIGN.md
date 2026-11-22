@@ -170,6 +170,9 @@ Borders provide field edges, outlines, and quiet dividers. Do not infer a univer
 
 ## Components
 
+The About introduction uses the user-selected `about-jeolee.jpg` in a 4:3 frame at `object-position: 50% 58%` on desktop and mobile, keeping both faces visible. Its original portrait file remains unchanged.
+
+
 ### Buttons and filters
 
 Primary actions pair pink fill with ground text; outline actions use white text, a thin outline border, and a field-colored hover. Shared buttons have a minimum height of 44px. The common button typography, padding, and shape are in the frontmatter; hero and large buttons have explicit route overrides.

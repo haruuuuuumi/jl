@@ -557,6 +557,19 @@
       "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
       "existingProvenanceRecord": "public/assets/video-thumbnails/86750cfd53532275312f.jpg.json",
       "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/about-jeolee.jpg",
+      "gitBlobSha": "fda8ffa299ff0f9f7b297ca7c3d556274c5f22e4",
+      "byteSize": 72475,
+      "width": 736,
+      "height": 1306,
+      "sha256": "ad954c8afa929b70f06e725572ca9d59b8a5491447a34242bdb8f05a2c789179",
+      "provenance": "user-supplied",
+      "evidence": "User attached this photograph and requested its use on the About page.",
+      "originalFilename": "063595d8f4de6fafeb5c36d3222e90a1.jpg",
+      "usage": "About introduction photograph",
+      "displayFraming": "4:3 frame; object-position 50% 58%; original image bytes preserved."
     }
   ],
   "optimizedVariants": [
