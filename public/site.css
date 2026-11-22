@@ -40,3 +40,55 @@
 
 /* Keep both smiles visible in the user-selected About photograph at every width. */
 .about-intro img.about-photo{height:auto;aspect-ratio:4/3;object-position:50% 58%}
+
+.moment-date-filters {
+  margin-bottom: 14px;
+  border: 1px solid var(--line, #6e6473);
+  border-radius: 14px;
+  background: var(--panel, #18171d);
+}
+.moment-date-filters summary {
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.moment-date-filters fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0 14px 14px;
+  border: 0;
+}
+.moment-date-filters legend {
+  padding: 0 0 8px;
+  font-size: 13px;
+}
+.moment-date-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.moment-date-fields label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.moment-date-fields input,
+.moment-date-fields select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding-inline: 8px;
+  font-size: 16px;
+}
+.moment-date-fields input::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: start;
+}
+@media (max-width: 600px) {
+  .moment-date-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .moment-date-fields > :last-child { grid-column: 1 / -1; }
+}
