@@ -18,7 +18,7 @@ async function passwordDigest(password,salt,secret,iterations=authIterations){
  return hex(new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:utf8.encode(salt),iterations},key,256)));
 }
 function equalDigest(a,b){if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;let difference=0;for(let i=0;i<a.length;i++)difference|=a.charCodeAt(i)^b.charCodeAt(i);return difference===0;}
-function ownerIdentity(request,env){const id=request.headers.get('oai-authenticated-user-id'),email=request.headers.get('oai-authenticated-user-email');return id&&email&&env.ADMIN_OWNER_EMAIL&&email.toLowerCase()===env.ADMIN_OWNER_EMAIL.toLowerCase()?id:null;}
+function ownerIdentity(request,env){if(env.ADMIN_AUTH_MODE==='password')return typeof env.ADMIN_PASSWORD==='string'&&env.ADMIN_PASSWORD.length>=12&&env.ADMIN_PASSWORD.length<=128?'password-admin':null;const id=request.headers.get('oai-authenticated-user-id'),email=request.headers.get('oai-authenticated-user-email');return id&&email&&env.ADMIN_OWNER_EMAIL&&email.toLowerCase()===env.ADMIN_OWNER_EMAIL.toLowerCase()?id:null;}
 function requireOwner(request,env){const owner=ownerIdentity(request,env);if(!owner)throw new CatalogError(403,'Sign in with the site owner’s ChatGPT account to use admin.');return owner;}
 function requireCatalogDb(env){if(!env.DB)throw new CatalogError(503,'The library database is not available right now.');return env.DB;}
 function requireAuthSecret(env){if(!env.ADMIN_AUTH_SECRET)throw new CatalogError(503,'Admin setup is not available right now.');return env.ADMIN_AUTH_SECRET;}
@@ -47,16 +47,17 @@ async function loadCatalogState(db,baseline){
 }
 function publicCatalogItem(item){const {status,revision,createdAt,updatedAt,sourceKey,categoryIds,titleSource,...publicItem}=item;return publicItem;}
 async function rateLimit(request,env,label,maximum,windowMs){
- const secret=requireAuthSecret(env),identity=request.headers.get('oai-authenticated-user-id')||request.headers.get('cf-connecting-ip')||'anonymous';
+ const secret=requireAuthSecret(env),identity=(env.ADMIN_AUTH_MODE==='password'?request.headers.get('cf-connecting-ip'):request.headers.get('oai-authenticated-user-id')||request.headers.get('cf-connecting-ip'))||'anonymous';
  const key=hex(await catalogHmac(secret,'rate:v1:'+label+':'+identity)),now=Date.now(),cutoff=now-windowMs;
  const result=await env.DB.prepare('INSERT INTO request_limits (key,window_start,attempts) VALUES (?,?,1) ON CONFLICT(key) DO UPDATE SET attempts=CASE WHEN window_start<? THEN 1 ELSE attempts+1 END,window_start=CASE WHEN window_start<? THEN ? ELSE window_start END RETURNING attempts').bind(key,now,cutoff,cutoff,now).first();
  if(result.attempts>maximum)throw new CatalogError(429,'Too many attempts. Please wait a few minutes and try again.');
 }
 function sessionToken(request){const value=(request.headers.get('cookie')||'').split(';').map(v=>v.trim()).find(v=>v.startsWith(adminCookie+'='))?.slice(adminCookie.length+1);return /^[a-f0-9]{64}$/.test(value||'')?value:null;}
 function sessionCookie(request,token,age=28800){return adminCookie+'='+token+'; Path=/; HttpOnly; SameSite=Strict; Max-Age='+age+(new URL(request.url).protocol==='https:'?'; Secure':'');}
-async function validAdminSession(request,env){const owner=ownerIdentity(request,env),token=sessionToken(request);if(!owner||!token)return false;const row=await env.DB.prepare('SELECT owner_id,expires_at FROM admin_sessions WHERE token_hash=?').bind(await sha256(token)).first();return row?.owner_id===owner&&row.expires_at>Date.now();}
+async function sessionOwner(request,env){const owner=ownerIdentity(request,env);if(!owner)return null;if(env.ADMIN_AUTH_MODE!=='password')return owner;if(!env.ADMIN_AUTH_SECRET)return null;return owner+':'+hex(await catalogHmac(env.ADMIN_AUTH_SECRET,'session-owner:v1:'+env.ADMIN_PASSWORD));}
+export async function validAdminSession(request,env){const token=sessionToken(request);if(!token||!env.DB)return false;const owner=await sessionOwner(request,env);if(!owner)return false;const row=await env.DB.prepare('SELECT owner_id,expires_at FROM admin_sessions WHERE token_hash=?').bind(await sha256(token)).first();return row?.owner_id===owner&&row.expires_at>Date.now();}
 async function requireAdminSession(request,env){requireOwner(request,env);if(!await validAdminSession(request,env))throw new CatalogError(401,'Your admin session has ended. Sign in again.');}
-async function createAdminSession(request,env){const owner=requireOwner(request,env),token=randomHex(32),now=Date.now();await env.DB.batch([env.DB.prepare('DELETE FROM admin_sessions WHERE expires_at<?').bind(now),env.DB.prepare('INSERT INTO admin_sessions (token_hash,owner_id,expires_at) VALUES (?,?,?)').bind(await sha256(token),owner,now+28800000)]);return sessionCookie(request,token);}
+async function createAdminSession(request,env){requireOwner(request,env);const owner=await sessionOwner(request,env),token=randomHex(32),now=Date.now();await env.DB.batch([env.DB.prepare('DELETE FROM admin_sessions WHERE expires_at<?').bind(now),env.DB.prepare('INSERT INTO admin_sessions (token_hash,owner_id,expires_at) VALUES (?,?,?)').bind(await sha256(token),owner,now+28800000)]);return sessionCookie(request,token);}
 function validatedCategoryIds(values,state){if(!Array.isArray(values)||values.length<1||values.length>20)throw new CatalogError(400,'Choose at least one category.');const ids=[...new Set(values)];if(ids.some(id=>typeof id!=='string'||!state.categories.some(c=>c.id===id)))throw new CatalogError(400,'Choose an existing category.');return ids;}
 async function resolveSubmittedVideo(post){
  const endpoint=new URL('https://cdn.syndication.twimg.com/tweet-result');endpoint.search=new URLSearchParams({id:post.id,lang:'en',token:getToken(post.id)});
@@ -73,11 +74,13 @@ export async function catalogApi(request,env,baseline){
   if(path.startsWith('/api/wiki')||path.startsWith('/api/admin/wiki'))return await wikiApi(request,env,{db,json:catalogJson,fail:(status,message)=>{throw new CatalogError(status,message);},body:()=>catalogBody(request,48000),write:()=>checkWriteOrigin(request),admin:()=>requireAdminSession(request,env),limit:()=>rateLimit(request,env,'wiki-submission',5,600000)});
   if(path==='/api/catalog'&&request.method==='GET'){const state=await loadCatalogState(db,baseline);return catalogJson({categories:state.categories,items:[...state.entries.values()].filter(i=>i.status==='published').map(publicCatalogItem)});}
   if(path==='/api/admin/session'&&request.method==='GET'){
+   if(env.ADMIN_AUTH_MODE==='password')return catalogJson({authenticated:await validAdminSession(request,env),requiresOwnerSignIn:false,setupRequired:false,passwordManagedExternally:true});
    if(!ownerIdentity(request,env))return catalogJson({authenticated:false,requiresOwnerSignIn:true,setupRequired:false});
    const config=await db.prepare('SELECT id FROM admin_config WHERE id=1').first();return catalogJson({authenticated:await validAdminSession(request,env),requiresOwnerSignIn:false,setupRequired:!config});
   }
   if(!['POST','PATCH','DELETE'].includes(request.method)&&!path.startsWith('/api/admin/catalog'))throw new CatalogError(405,'This action is not available.');
   if(['POST','PATCH','DELETE'].includes(request.method))checkWriteOrigin(request);
+  if(env.ADMIN_AUTH_MODE==='password'&&['/api/admin/setup','/api/admin/password'].includes(path))throw new CatalogError(405,'The admin password is managed in site settings.');
   if(path==='/api/admin/setup'&&request.method==='POST'){
    requireOwner(request,env);const secret=requireAuthSecret(env);await rateLimit(request,env,'setup',5,900000);const body=await catalogBody(request);
    if(typeof body.password!=='string'||body.password.length<12||body.password.length>128)throw new CatalogError(400,'Use a password between 12 and 128 characters.');
@@ -87,6 +90,12 @@ export async function catalogApi(request,env,baseline){
    return catalogJson({authenticated:true},201,{'set-cookie':await createAdminSession(request,env)});
   }
   if(path==='/api/admin/login'&&request.method==='POST'){
+   if(env.ADMIN_AUTH_MODE==='password'){
+    if(!ownerIdentity(request,env))throw new CatalogError(503,'Admin sign-in is not configured yet.');
+    const secret=requireAuthSecret(env);await rateLimit(request,env,'login',5,900000);const body=await catalogBody(request);
+    if(typeof body.password!=='string'||body.password.length>128||!equalDigest(hex(await catalogHmac(secret,'login:v1:'+body.password)),hex(await catalogHmac(secret,'login:v1:'+env.ADMIN_PASSWORD))))throw new CatalogError(401,'That password did not match.');
+    return catalogJson({authenticated:true},200,{'set-cookie':await createAdminSession(request,env)});
+   }
    requireOwner(request,env);const secret=requireAuthSecret(env);await rateLimit(request,env,'login',5,900000);const body=await catalogBody(request),config=await db.prepare('SELECT password_hash,password_salt,iterations FROM admin_config WHERE id=1').first();
    if(!config)throw new CatalogError(409,'Create your admin password first.');
    if(typeof body.password!=='string'||body.password.length>128||!equalDigest(await passwordDigest(body.password,config.password_salt,secret,config.iterations),config.password_hash))throw new CatalogError(401,'That password did not match.');

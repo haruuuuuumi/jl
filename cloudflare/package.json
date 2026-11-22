@@ -10,9 +10,6 @@
     "db:migrate": "wrangler d1 migrations apply DB --remote --config wrangler.local.json",
     "deploy:local": "node ready.mjs && wrangler d1 migrations apply DB --remote --config wrangler.local.json && wrangler deploy --config wrangler.local.json"
   },
-  "dependencies": {
-    "jose": "6.2.18"
-  },
   "devDependencies": {
     "wrangler": "4.166.0"
   },

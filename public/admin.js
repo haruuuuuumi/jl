@@ -18,7 +18,7 @@ async function showAuth(){
  $('#admin-workspace').hidden=true;$('#auth-panel').hidden=false;$('#logout').hidden=true;$('#change-password').hidden=true;$('#password-form').hidden=true;$('#owner-signin').hidden=true;$('#auth-retry').hidden=true;$('#auth-error').textContent='';
  try{
   const session=await api('/api/admin/session',undefined,'GET');
-  if(session.authenticated){$('#password-form').reset();await loadWorkspace();return;}
+  window.adminPasswordManagedExternally=!!session.passwordManagedExternally;if(session.authenticated){$('#password-form').reset();await loadWorkspace();return;}
   if(session.requiresOwnerSignIn){$('#auth-title').textContent='Your collection, your call.';$('#auth-description').textContent='Continue with the site owner’s ChatGPT account to open the admin view.';$('#owner-signin').hidden=false;return;}
   setup=session.setupRequired;$('#auth-title').textContent=setup?'Make it yours.':'Welcome back.';$('#auth-description').textContent=setup?'Choose an admin password with at least 12 characters. Only your signed-in owner account can set it.':'Enter your admin password to edit the library and review submissions.';
   $('#password-form').hidden=false;$('#confirm-wrap').hidden=!setup;$('#confirm-password').required=setup;$('#admin-password').minLength=setup?12:1;$('#admin-password').autocomplete=setup?'new-password':'current-password';$('#auth-submit').textContent=setup?'Create password and open admin':'Open admin';$('#admin-password').focus();
@@ -26,7 +26,7 @@ async function showAuth(){
 }
 function updateCategoryOptions(){const selected=$('#admin-category').value;$('#admin-category').innerHTML='<option value="all">All categories</option>'+state.categories.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');$('#admin-category').value=state.categories.some(c=>c.id===selected)?selected:'all';}
 async function loadWorkspace(){
- try{state=await api('/api/admin/catalog',undefined,'GET');$('#auth-panel').hidden=true;$('#admin-workspace').hidden=false;$('#logout').hidden=false;$('#change-password').hidden=false;$('#workspace-error').textContent='';updateCategoryOptions();renderRows();const legacy=legacyClips();$('#import-browser-clips').hidden=!legacy.length;window.dispatchEvent(new Event('admin:ready'));}
+ try{state=await api('/api/admin/catalog',undefined,'GET');$('#auth-panel').hidden=true;$('#admin-workspace').hidden=false;$('#logout').hidden=false;$('#change-password').hidden=!!window.adminPasswordManagedExternally;$('#workspace-error').textContent='';updateCategoryOptions();renderRows();const legacy=legacyClips();$('#import-browser-clips').hidden=!legacy.length;window.dispatchEvent(new Event('admin:ready'));}
  catch(error){$('#workspace-error').textContent=error.message;throw error;}
 }
 function renderRows(){

@@ -14,4 +14,4 @@ async function walk(dir){for(const entry of await readdir(dir,{withFileTypes:tru
 }}
 await walk(resolve(root,'public'));
 const baseline=await readBaseline(root);await writeFile(resolve(out,'catalog.mjs'),'export const baseline='+JSON.stringify(baseline)+';\n');
-console.log(`Cloudflare build: ${baseline.length} baseline cards, ${count} private static assets; original Sites build unchanged.`);
+console.log(`Cloudflare build: ${baseline.length} baseline cards, ${count} public static assets; admin is password protected.`);
