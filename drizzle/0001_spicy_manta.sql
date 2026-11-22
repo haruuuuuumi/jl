@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `catalog_entries_media_key_unique` ON `catalog_entries` (`media_key`);

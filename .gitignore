@@ -1,0 +1,14 @@
+node_modules/
+cloudflare/build/
+cloudflare/.wrangler/
+cloudflare/wrangler.local.json
+.cloudflare-data/
+.env
+.env.*
+!.env.example
+.dev.vars*
+cloudflare/.dev.vars*
+*.sqlite
+*.sqlite-*
+.openai/
+.impeccable/

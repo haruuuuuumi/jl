@@ -1,0 +1,22 @@
+{
+  "name": "jeolee-cupids-cloudflare",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && node --test test.mjs",
+    "whoami": "wrangler whoami",
+    "deploy": "node configure.mjs && node ready.mjs && wrangler deploy --config wrangler.local.json",
+    "db:migrate": "wrangler d1 migrations apply DB --remote --config wrangler.local.json",
+    "deploy:local": "node ready.mjs && wrangler deploy --config wrangler.local.json"
+  },
+  "dependencies": {
+    "jose": "6.2.18"
+  },
+  "devDependencies": {
+    "wrangler": "4.166.0"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}
