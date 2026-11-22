@@ -45,7 +45,7 @@ async function loadCatalogState(db,baseline){
  for(const item of entries.values()){const names=item.categoryIds.map(id=>categoryMap.get(id)?.name).filter(Boolean);item.category=names[0]||'Uncategorized';item.collections=names;delete item.custom;}
  return {categories,entries};
 }
-function publicCatalogItem(item){const {status,revision,createdAt,updatedAt,sourceKey,categoryIds,titleSource,...publicItem}=item;return publicItem;}
+function publicCatalogItem(item){const {status,revision,createdAt,updatedAt,sourceKey,categoryIds,titleSource,suggestedCategory,...publicItem}=item;return publicItem;}
 async function rateLimit(request,env,label,maximum,windowMs){
  const secret=requireAuthSecret(env),identity=(env.ADMIN_AUTH_MODE==='password'?request.headers.get('cf-connecting-ip'):request.headers.get('oai-authenticated-user-id')||request.headers.get('cf-connecting-ip'))||'anonymous';
  const key=hex(await catalogHmac(secret,'rate:v1:'+label+':'+identity)),now=Date.now(),cutoff=now-windowMs;
@@ -58,7 +58,9 @@ async function sessionOwner(request,env){const owner=ownerIdentity(request,env);
 export async function validAdminSession(request,env){const token=sessionToken(request);if(!token||!env.DB)return false;const owner=await sessionOwner(request,env);if(!owner)return false;const row=await env.DB.prepare('SELECT owner_id,expires_at FROM admin_sessions WHERE token_hash=?').bind(await sha256(token)).first();return row?.owner_id===owner&&row.expires_at>Date.now();}
 async function requireAdminSession(request,env){requireOwner(request,env);if(!await validAdminSession(request,env))throw new CatalogError(401,'Your admin session has ended. Sign in again.');}
 async function createAdminSession(request,env){requireOwner(request,env);const owner=await sessionOwner(request,env),token=randomHex(32),now=Date.now();await env.DB.batch([env.DB.prepare('DELETE FROM admin_sessions WHERE expires_at<?').bind(now),env.DB.prepare('INSERT INTO admin_sessions (token_hash,owner_id,expires_at) VALUES (?,?,?)').bind(await sha256(token),owner,now+28800000)]);return sessionCookie(request,token);}
-function validatedCategoryIds(values,state){if(!Array.isArray(values)||values.length<1||values.length>20)throw new CatalogError(400,'Choose at least one category.');const ids=[...new Set(values)];if(ids.some(id=>typeof id!=='string'||!state.categories.some(c=>c.id===id)))throw new CatalogError(400,'Choose an existing category.');return ids;}
+function cleanCategoryName(value){const name=cleanTitle(value).normalize('NFKC').replace(/\s+/g,' ');if(name.length>40)throw new CatalogError(400,'Use a category name up to 40 characters.');return name;}
+function categoryKey(name){return name.normalize('NFKC').replace(/\s+/g,' ').trim().toLocaleLowerCase();}
+function validatedCategoryIds(values,state,allowEmpty=false){if(!Array.isArray(values)||values.length<(allowEmpty?0:1)||values.length>20)throw new CatalogError(400,'Choose at least one category.');const ids=[...new Set(values)];if(ids.some(id=>typeof id!=='string'||!state.categories.some(c=>c.id===id)))throw new CatalogError(400,'Choose an existing category.');return ids;}
 async function resolveSubmittedVideo(post){
  const endpoint=new URL('https://cdn.syndication.twimg.com/tweet-result');endpoint.search=new URLSearchParams({id:post.id,lang:'en',token:getToken(post.id)});
  let response,data;try{response=await fetch(endpoint.href,{headers:{accept:'application/json','user-agent':'JeoleeOnRepeat/1.0'},signal:AbortSignal.timeout(12000)});if(!response.ok){console.warn('Public video metadata response',response.status,(await response.text()).slice(0,240));throw new Error();}data=await response.json();}catch(error){console.warn('Public video metadata check failed',post.id,response?.status||error.name);throw new CatalogError(422,'This public video could not be checked. Please try again later.');}
@@ -106,17 +108,20 @@ export async function catalogApi(request,env,baseline){
   }
   if(path==='/api/submissions'&&request.method==='POST'){
    await rateLimit(request,env,'submission',await validAdminSession(request,env)?60:5,600000);const body=await catalogBody(request),post=parseCatalogPost(body.url),title=cleanTitle(body.title);if(!post)throw new CatalogError(400,'Paste a full public X video post link.');
-   const state=await loadCatalogState(db,baseline),categoryIds=validatedCategoryIds([body.categoryId],state),video=await resolveSubmittedVideo(post),key=sourceKey({url:video.sourceUrl});
+   const state=await loadCatalogState(db,baseline),suggestedCategory=body.suggestedCategory===undefined?null:cleanCategoryName(body.suggestedCategory);
+   if(suggestedCategory&&body.categoryId)throw new CatalogError(400,'Choose an existing category or suggest a new one.');
+   if(suggestedCategory&&state.categories.some(c=>categoryKey(c.name)===categoryKey(suggestedCategory)))throw new CatalogError(400,'That category already exists. Choose it from the list.');
+   const categoryIds=suggestedCategory?[]:validatedCategoryIds([body.categoryId],state),video=await resolveSubmittedVideo(post),key=sourceKey({url:video.sourceUrl});
    if([...state.entries.values()].some(i=>i.sourceKey===key||i.mediaKey&&i.mediaKey===video.mediaKey))throw new CatalogError(409,'That video is already in the library or review queue.');
-   const id='submitted-'+crypto.randomUUID(),now=Date.now(),item={...video,id,title,url:video.sourceUrl,kind:'clip'};
+   const id='submitted-'+crypto.randomUUID(),now=Date.now(),item={...video,id,title,url:video.sourceUrl,kind:'clip',...(suggestedCategory?{suggestedCategory}:{})};
    try{await db.prepare('INSERT INTO catalog_entries (id,source_key,media_key,title,item_json,category_ids,status,revision,created_at,updated_at) VALUES (?,?,?,?,?,?,\'pending\',1,?,?)').bind(id,key,video.mediaKey,title,JSON.stringify(item),JSON.stringify(categoryIds),now,now).run();}catch(error){if(String(error.message).includes('UNIQUE'))throw new CatalogError(409,'That video is already in the review queue.');throw error;}
    return catalogJson({id,status:'pending',message:'Submitted for review. It will appear after approval.'},201);
   }
   await requireAdminSession(request,env);
-  if(path==='/api/admin/catalog'&&request.method==='GET'){const state=await loadCatalogState(db,baseline);return catalogJson({categories:state.categories,items:[...state.entries.values()].map(i=>({...publicCatalogItem(i),categoryIds:i.categoryIds,status:i.status,revision:i.revision,createdAt:i.createdAt,updatedAt:i.updatedAt}))});}
+  if(path==='/api/admin/catalog'&&request.method==='GET'){const state=await loadCatalogState(db,baseline);return catalogJson({categories:state.categories,items:[...state.entries.values()].map(i=>({...publicCatalogItem(i),suggestedCategory:i.suggestedCategory||null,categoryIds:i.categoryIds,status:i.status,revision:i.revision,createdAt:i.createdAt,updatedAt:i.updatedAt}))});}
   if(path==='/api/admin/categories'&&request.method==='POST'){
-   const body=await catalogBody(request),name=cleanTitle(body.name);if(name.length>40)throw new CatalogError(400,'Use a category name up to 40 characters.');
-   const state=await loadCatalogState(db,baseline),nameKey=name.toLocaleLowerCase();if(state.categories.some(c=>c.name.toLocaleLowerCase()===nameKey))throw new CatalogError(409,'That category already exists.');
+   const body=await catalogBody(request),name=cleanCategoryName(body.name);
+   const state=await loadCatalogState(db,baseline),nameKey=categoryKey(name);if(state.categories.some(c=>categoryKey(c.name)===nameKey))throw new CatalogError(409,'That category already exists.');
    const id='category-'+crypto.randomUUID(),position=Math.max(...state.categories.map(c=>c.position),0)+1;try{await db.prepare('INSERT INTO catalog_categories (id,name,name_key,position,created_at) VALUES (?,?,?,?,?)').bind(id,name,nameKey,position,Date.now()).run();}catch(error){if(String(error.message).includes('UNIQUE'))throw new CatalogError(409,'That category already exists.');throw error;}
    return catalogJson({id,name,position},201);
   }
@@ -124,11 +129,23 @@ export async function catalogApi(request,env,baseline){
   if(edit&&request.method==='PATCH'){
    const body=await catalogBody(request),state=await loadCatalogState(db,baseline),item=state.entries.get(edit[1]);if(!item)throw new CatalogError(404,'This clip was not found.');
    if(body.revision!==item.revision)throw new CatalogError(409,'This clip changed in another session. Reload before saving.');
-   const title=body.title===undefined?item.title:cleanTitle(body.title),categoryIds=body.categoryIds===undefined?item.categoryIds:validatedCategoryIds(body.categoryIds,state),status=body.status===undefined?item.status:body.status;
+   const title=body.title===undefined?item.title:cleanTitle(body.title),status=body.status===undefined?item.status:body.status;
    if(!['published','pending','rejected','deleted'].includes(status))throw new CatalogError(400,'Choose a valid review action.');
-   const now=Date.now();let result;
-   if(item.revision===0)result=await db.prepare('INSERT INTO catalog_entries (id,source_key,media_key,title,item_json,category_ids,status,revision,created_at,updated_at) VALUES (?,?,?,?,?,?,?,1,?,?) ON CONFLICT(id) DO NOTHING').bind(item.id,item.sourceKey,item.mediaKey||null,title,JSON.stringify(publicCatalogItem(item)),JSON.stringify(categoryIds),status,now,now).run();
-   else result=await db.prepare('UPDATE catalog_entries SET title=?,category_ids=?,status=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?').bind(title,JSON.stringify(categoryIds),status,now,item.id,item.revision).run();
+   let suggestedCategory=item.suggestedCategory;
+   if(body.suggestedCategory!==undefined){if(!suggestedCategory)throw new CatalogError(400,'This clip has no category suggestion.');suggestedCategory=cleanCategoryName(body.suggestedCategory);}
+   const newName=body.newCategoryName===undefined?null:cleanCategoryName(body.newCategoryName);
+   if(newName&&(!suggestedCategory||status!=='published'))throw new CatalogError(400,'Publish a suggested category when approving its clip.');
+   const categoryIds=body.categoryIds===undefined?[...item.categoryIds]:validatedCategoryIds(body.categoryIds,state,!!newName||!!suggestedCategory&&status!=='published');
+   let createdCategory=null;
+   if(newName){const existing=state.categories.find(c=>categoryKey(c.name)===categoryKey(newName));createdCategory=existing?null:{id:'category-'+crypto.randomUUID(),name:newName,position:Math.max(...state.categories.map(c=>c.position),0)+1};const id=existing?.id||createdCategory.id;if(!categoryIds.includes(id))categoryIds.push(id);}
+   if(status==='published'&&!categoryIds.length)throw new CatalogError(400,'Choose an existing category or publish the suggested category.');
+   const now=Date.now(),storedItem={...publicCatalogItem(item),...(suggestedCategory&&status!=='published'?{suggestedCategory}:{})};
+   const entryStatement=item.revision===0?db.prepare('INSERT INTO catalog_entries (id,source_key,media_key,title,item_json,category_ids,status,revision,created_at,updated_at) VALUES (?,?,?,?,?,?,?,1,?,?) ON CONFLICT(id) DO NOTHING').bind(item.id,item.sourceKey,item.mediaKey||null,title,JSON.stringify(storedItem),JSON.stringify(categoryIds),status,now,now):db.prepare('UPDATE catalog_entries SET title=?,item_json=?,category_ids=?,status=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?').bind(title,JSON.stringify(storedItem),JSON.stringify(categoryIds),status,now,item.id,item.revision);
+   let result;
+   if(createdCategory){
+    const createStatement=db.prepare("INSERT INTO catalog_categories (id,name,name_key,position,created_at) SELECT ?,?,?,?,? WHERE EXISTS (SELECT 1 FROM catalog_entries WHERE id=? AND revision=? AND status='published' AND instr(category_ids,?)>0)").bind(createdCategory.id,createdCategory.name,categoryKey(createdCategory.name),createdCategory.position,now,item.id,item.revision+1,JSON.stringify(createdCategory.id));
+    try{[result]=await db.batch([entryStatement,createStatement]);}catch(error){if(String(error.message).includes('UNIQUE'))throw new CatalogError(409,'That category was just created. Reopen the clip and choose it from the list.');throw error;}
+   }else result=await entryStatement.run();
    if(!result.meta.changes)throw new CatalogError(409,'This clip changed in another session. Reload before saving.');
    return catalogJson({id:item.id,status,revision:item.revision+1});
   }

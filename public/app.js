@@ -131,22 +131,25 @@ document.addEventListener('click',event=>{
 $('#empty-action').addEventListener('click',()=>{if(!libraryReady){loadSharedCatalog();return;}if(query){query='';$('#search-input').value='';render();$('#search-input').focus();}});
 $('.close-viewer').addEventListener('click',()=>viewer.close());$('#close-add').addEventListener('click',()=>addDialog.close());
 for(const dialog of [viewer,addDialog]){dialog.addEventListener('click',e=>{if(e.target===dialog){const rect=dialog.getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)dialog.close();}});dialog.addEventListener('close',()=>{if(dialog===viewer){embedGeneration++;stopVideo();$('#creator-header').replaceChildren();}syncDialogLock();});}
+function syncCategorySuggestion(focus=false){const suggesting=$('#clip-category').value==='__suggest_new__';$('#clip-suggestion').hidden=!suggesting;$('#clip-new-category').disabled=!suggesting;$('#clip-new-category').required=suggesting;if(suggesting&&focus)$('#clip-new-category').focus();}
+$('#clip-category').addEventListener('change',()=>syncCategorySuggestion(true));
 $('#add-form').addEventListener('submit',async event=>{
   event.preventDefault();const post=parsePost($('#clip-url').value),title=$('#clip-title').value.trim();
   if(!post){$('#add-error').textContent='Paste a full X video post link, including /status/ and the post number.';return;}
   if(!title){$('#add-error').textContent='Give this moment a name first.';return;}
+  const suggesting=$('#clip-category').value==='__suggest_new__',suggestedCategory=$('#clip-new-category').value.trim();if(suggesting&&!suggestedCategory){$('#add-error').textContent='Give your suggested category a name.';return;}
   const submit=$('#add-form button[type="submit"]');submit.disabled=true;submit.textContent='Submitting…';$('#add-error').textContent='';
   try{
-    const response=await fetch('/api/submissions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:post.url,title,categoryId:$('#clip-category').value})});
+    const response=await fetch('/api/submissions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:post.url,title,...(suggesting?{suggestedCategory}:{categoryId:$('#clip-category').value})})});
     const data=await response.json();if(!response.ok)throw new Error(data.error||'This clip could not be submitted.');
-    $('#add-form').reset();addDialog.close();notify('Submitted for review. It will appear after approval.');
+    $('#add-form').reset();syncCategorySuggestion();addDialog.close();notify('Submitted for review. It will appear after approval.');
   }catch(error){$('#add-error').textContent=error.message||'This clip could not be submitted. Please try again.';}
   finally{submit.disabled=false;submit.textContent='Submit for review';}
 });
 $('#search-toggle').addEventListener('click',()=>{const opening=$('#search-panel').hidden;$('#search-panel').hidden=!opening;$('#search-toggle').setAttribute('aria-expanded',String(opening));if(opening)$('#search-input').focus();});
 $('#search-close').addEventListener('click',()=>{$('#search-panel').hidden=true;$('#search-toggle').setAttribute('aria-expanded','false');query='';$('#search-input').value='';render();$('#search-toggle').focus();});
 $('#search-panel').addEventListener('submit',e=>e.preventDefault());$('#search-input').addEventListener('input',()=>{query=$('#search-input').value.trim().toLowerCase();if(currentView()==='collections')location.hash='browse';else render();});
-function scrollToView(){const target=document.getElementById(location.hash.slice(1));const behavior=window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth';if(target)target.scrollIntoView({behavior,block:'start'});else window.scrollTo({top:0,behavior});}
+function scrollToView(){if(['#about-jeolee','#jeo-profile','#gehlee-profile','#fandoms'].includes(location.hash)){location.replace('/about'+location.hash);return;}const target=document.getElementById(location.hash.slice(1));const behavior=window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth';if(target)target.scrollIntoView({behavior,block:'start'});else window.scrollTo({top:0,behavior});}
 window.addEventListener('hashchange',()=>{render();scrollToView();});
 async function loadSharedCatalog(quiet=false){
   if(!quiet){libraryError='';render();}
@@ -155,7 +158,7 @@ async function loadSharedCatalog(quiet=false){
     categoryRecords=data.categories;categories=categoryRecords.map(c=>c.name);items=data.items;
     if(category!=='all'&&!categories.includes(category))category='all';
     $('#category-filters').innerHTML=[{name:'All moments',value:'all'},...categories.map(name=>({name,value:name}))].map(c=>`<button class="filter" data-filter="${esc(c.value)}" aria-pressed="false">${esc(c.name)}</button>`).join('');
-    $('#clip-category').replaceChildren(...categoryRecords.map(c=>{const option=document.createElement('option');option.value=c.id;option.textContent=c.name;return option;}));
+    const selectedCategory=$('#clip-category').value;$('#clip-category').replaceChildren(...[...categoryRecords,{id:'__suggest_new__',name:'＋ Suggest a new category'}].map(c=>{const option=document.createElement('option');option.value=c.id;option.textContent=c.name;return option;}));if([...$('#clip-category').options].some(o=>o.value===selectedCategory))$('#clip-category').value=selectedCategory;syncCategorySuggestion();
     libraryReady=true;libraryError='';syncFeaturedItems();render();if(!quiet&&location.hash)requestAnimationFrame(scrollToView);
   }catch(error){if(!libraryReady){libraryError='Please refresh or try again in a moment.';render();}else if(!quiet)notify('The collection couldn’t refresh. Please try again.');}
 }
@@ -168,4 +171,5 @@ function syncFeaturedItems(){
   });
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!viewer.open&&!addDialog.open&&libraryReady)loadSharedCatalog(true);});
+if(['#about-jeolee','#jeo-profile','#gehlee-profile','#fandoms'].includes(location.hash))location.replace('/about'+location.hash);
 loadSharedCatalog();

@@ -95,3 +95,70 @@ test('anonymous video submissions are checked and remain absent from the publish
   assert.equal((await (await app.fetch(req('/api/catalog'),env,context)).json()).items.length,baseline.length);
  }finally{globalThis.fetch=originalFetch;DB.close();}
 });
+
+function stubSubmissionVideos(){
+ const original=globalThis.fetch;
+ globalThis.fetch=async input=>{const id=new URL(input).searchParams.get('id');return Response.json({__typename:'Tweet',user:{screen_name:'test_cupid',name:'Test Cupid'},mediaDetails:[{type:'video',media_url_https:'https://pbs.twimg.com/amplify_video_thumb/'+id+'/img/test.jpg',video_info:{duration_millis:1000,variants:[{content_type:'video/mp4',url:'https://video.twimg.com/'+id+'.mp4',bitrate:100000}]}}]});};
+ return ()=>{globalThis.fetch=original;};
+}
+async function suggestClip(env,id,name){
+ const response=await app.fetch(req('/api/submissions',null,post({title:'A suggested clip',url:'https://x.com/test_cupid/status/'+id,suggestedCategory:name})),env,context);assert.equal(response.status,201);return (await response.json()).id;
+}
+async function editClip(env,cookie,id,body){return app.fetch(req('/api/admin/clips/'+id,null,{method:'PATCH',headers:{origin,'content-type':'application/json',cookie},body:JSON.stringify(body)}),env,context);}
+test('new category suggestions stay private until the admin approves and publishes them with a clip',async()=>{
+ const DB=await localD1(),restore=stubSubmissionVideos();try{
+  const env={...baseEnv,DB},id=await suggestClip(env,'9999999999999999001','Bandana days');
+  const before=await (await app.fetch(req('/api/catalog'),env,context)).json();assert.equal(before.categories.length,4);assert.equal(before.items.length,baseline.length);
+  assert.equal((await editClip(env,'',id,{revision:1,status:'published',newCategoryName:'Bandana days',categoryIds:[]})).status,401);
+  const cookie=await login(env),review=await (await app.fetch(req('/api/admin/catalog',null,{headers:{cookie}}),env,context)).json();assert.equal(review.items.find(i=>i.id===id).suggestedCategory,'Bandana days');
+  assert.equal((await editClip(env,cookie,id,{revision:1,status:'published'})).status,400);
+  assert.equal((await editClip(env,cookie,id,{revision:1,categoryIds:[],suggestedCategory:'Bandana moments'})).status,200);
+  assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_categories').get().n,0);
+  assert.equal((await editClip(env,cookie,id,{revision:2,status:'published',categoryIds:[],newCategoryName:'Bandana moments'})).status,200);
+  const published=await (await app.fetch(req('/api/catalog'),env,context)).json(),item=published.items.find(i=>i.id===id);assert.equal(published.categories.length,5);assert.equal(item.category,'Bandana moments');assert.equal(item.suggestedCategory,undefined);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_categories').get().n,1);
+  assert.equal((await editClip(env,cookie,id,{revision:2,status:'published',categoryIds:[],newCategoryName:'A stale suggestion'})).status,409);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_categories').get().n,1);
+ }finally{restore();DB.close();}
+});
+test('admin can reject the suggested category and publish the clip in an existing category',async()=>{
+ const DB=await localD1(),restore=stubSubmissionVideos();try{
+  const env={...baseEnv,DB},id=await suggestClip(env,'9999999999999999002','Unused suggestion'),cookie=await login(env);
+  assert.equal((await editClip(env,cookie,id,{revision:1,status:'published',categoryIds:['fan-edits']})).status,200);
+  const data=await (await app.fetch(req('/api/catalog'),env,context)).json();assert.equal(data.categories.length,4);assert.equal(data.items.find(i=>i.id===id).category,'Fan edits');assert.equal(data.items.find(i=>i.id===id).suggestedCategory,undefined);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_categories').get().n,0);
+ }finally{restore();DB.close();}
+});
+test('matching category suggestions reuse the category already approved by the admin',async()=>{
+ const DB=await localD1(),restore=stubSubmissionVideos();try{
+  const env={...baseEnv,DB},first=await suggestClip(env,'9999999999999999003','Cupid favorites'),second=await suggestClip(env,'9999999999999999004','cupid favorites'),cookie=await login(env);
+  for(const [id,name] of [[first,'Cupid favorites'],[second,'CUPID FAVORITES']])assert.equal((await editClip(env,cookie,id,{revision:1,status:'published',categoryIds:[],newCategoryName:name})).status,200);
+  assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_categories').get().n,1);
+  const data=await (await app.fetch(req('/api/catalog'),env,context)).json();assert.equal(data.items.find(i=>i.id===first).category,'Cupid favorites');assert.equal(data.items.find(i=>i.id===second).category,'Cupid favorites');
+ }finally{restore();DB.close();}
+});
+test('a concurrent review cannot leave a public category behind without the approved clip',async()=>{
+ const DB=await localD1(),restore=stubSubmissionVideos();try{
+  const env={...baseEnv,DB},id=await suggestClip(env,'9999999999999999005','Race-safe suggestion'),cookie=await login(env),batch=DB.batch;
+  DB.batch=async statements=>{DB.sqlite.prepare('UPDATE catalog_entries SET revision=revision+1 WHERE id=?').run(id);return batch(statements);};
+  assert.equal((await editClip(env,cookie,id,{revision:1,status:'published',categoryIds:[],newCategoryName:'Race-safe suggestion'})).status,409);
+  assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_categories').get().n,0);assert.equal(DB.sqlite.prepare('SELECT status FROM catalog_entries WHERE id=?').get(id).status,'pending');
+ }finally{restore();DB.close();}
+});
+test('invalid category suggestions are rejected before video metadata is requested',async()=>{
+ const DB=await localD1();try{const env={...baseEnv,DB};
+ for(const suggestedCategory of ['', 'x'.repeat(41),'fan edits']){const response=await app.fetch(req('/api/submissions',null,post({title:'Invalid suggestion',url:'https://x.com/test_cupid/status/9999999999999999006',suggestedCategory})),env,context);assert.equal(response.status,400);}
+ assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_categories').get().n,0);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_entries').get().n,0);
+ }finally{DB.close();}
+});
+
+test('About Jeolee has its own public page and the homepage links to it',async()=>{
+ const env={SITE_ORIGIN:origin,ASSETS:assets};const response=await app.fetch(req('/about'),env,context);assert.equal(response.status,200);assert.equal(await response.text(),'asset:/about.html');
+ const redirect=await app.fetch(req('/about/'),env,context);assert.equal(redirect.status,308);assert.equal(redirect.headers.get('location'),'/about');
+ const about=await readFile(new URL('../public/about.html',import.meta.url),'utf8'),home=await readFile(new URL('../public/index.html',import.meta.url),'utf8');assert.ok(about.includes('id="jeo-profile"'));assert.ok(about.includes('id="gehlee-profile"'));assert.ok(about.includes('id="fandoms"'));assert.ok(home.includes('href="/about"'));assert.ok(!home.includes('id="jeo-profile"'));assert.ok(!about.includes('src="app.js'));
+});
+
+test('free fandom feeds refresh at noon and midnight Philippine time without an API token',async()=>{
+ const source=await readFile(new URL('../public/fandom-feeds.js',import.meta.url),'utf8');const clock=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+ assert.deepEqual(clock.FANDOM_ACCOUNTS.map(a=>a.handle),['jeoleenation','official_jeolee','withjeolee']);
+ const beforeNoon=Date.parse('2026-11-22T03:59:59Z'),noon=Date.parse('2026-11-22T04:00:00Z'),midnight=Date.parse('2026-11-22T16:00:00Z');
+ assert.equal(clock.nextFeedRefreshAt(beforeNoon),noon);assert.equal(clock.nextFeedRefreshAt(noon),midnight);assert.equal(clock.feedRefreshWindow(beforeNoon)+1,clock.feedRefreshWindow(noon));assert.equal(clock.feedRefreshWindow(noon)+1,clock.feedRefreshWindow(midnight));
+ const home=await readFile(new URL('../public/index.html',import.meta.url),'utf8');assert.ok(home.includes('id="fandom-feed-tabs"'));assert.ok(home.includes('id="fandom-feed-source"'));
+});

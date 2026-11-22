@@ -1,6 +1,6 @@
 # Jeolee Cupids
 
-A public pink-and-black Jeolee fan hub: Just Jeolee, Tinginan serye, Their soundtrack, Fan edits, news and Cupids’ Space. Visitors can browse and submit without an account. Clips and page contributions stay pending until the admin approves them.
+A public pink-and-black Jeolee fan hub: Just Jeolee, Tinginan serye, Their soundtrack, Fan edits, news and Cupids’ Space. The biography and fandom directory have their own `/about` page. Visitors can browse and submit without an account. Clips and page contributions stay pending until the admin approves them. Clip submissions can suggest a new category; the admin can rename and publish it with the clip, or choose an existing category. Suggestions do not create public categories before approval.
 
 **Admin uses one password.** `/admin` shows a password form; dashboard HTML, scripts and moderation APIs require a valid HttpOnly session. There is no visitor login, owner-account login or Cloudflare Access requirement.
 
@@ -27,6 +27,10 @@ Delete the dedicated **Jeolee Cupids** application in **Zero Trust → Access co
 The new D1 database `jeolee-cupids` is configured with the owner-provided ID. Deployments apply versioned schema migrations before publishing and do not reset content. No build-time variables are required; `CLOUDFLARE_D1_DATABASE_ID` is an optional override. Workers.dev and preview URLs remain disabled.
 
 If Cloudflare reports Framework: Static or runs only `npx wrangler deploy`, use the build settings above. The root Wrangler file rejects static deployment because it would bypass the admin middleware.
+
+## Fandom feeds
+
+The homepage embeds public X timelines for `jeoleenation`, `official_jeolee` and `withjeolee`, with account credit and original-profile links. No X API token or server import is used. Feeds load when viewed; the open page recreates its active embed at noon and midnight Asia/Manila, and catches up when a hidden tab becomes visible. X controls whether a timeline loads. No successful fetch time or new-post count is invented when X is unavailable.
 
 ## Local checks
 

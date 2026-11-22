@@ -6,3 +6,5 @@
 @media(max-width:370px){.site-header nav a{font-size:12px;padding:8px}.hub-actions .button{font-size:13px;padding:12px}.hub-person h2{font-size:22px}.admin-header nav{width:100%;margin-top:10px}}
 
 .admin-tabs button[aria-pressed=true],.row-actions .approve{color:var(--ground)}.admin-area-switch button[aria-pressed=true]{color:var(--pink)}.admin-label,.eyebrow{letter-spacing:0}.button{line-height:1.3}
+
+.site-header nav{overflow-x:auto;scrollbar-width:none}.site-header nav::-webkit-scrollbar{display:none}.site-header nav a{flex-shrink:0}

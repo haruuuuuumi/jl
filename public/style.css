@@ -35,3 +35,5 @@ dialog{border:0;background:#19191e;color:var(--white);padding:0;max-height:90dvh
 .viewer:has(.creator-header:not([hidden])) .viewer-links,.viewer-links:has(#source-link[hidden]){display:none}.side-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}footer a{margin-left:16px}
 
 @media(min-width:701px) and (max-width:1000px){.site-header{gap:20px}.site-header>.wordmark{padding-right:18px;font-size:46px}.site-header nav{gap:18px;min-width:0}.site-header nav a{font-size:21px}.header-actions{gap:10px}.header-actions .button{font-size:20px;padding:9px 14px}}
+
+.category-suggestion-help{font-size:13px;color:var(--muted);line-height:1.5;margin:8px 0 0}

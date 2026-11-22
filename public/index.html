@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b0b0f">
   <meta name="description" content="Meet Jeo Ong and Gehlee Dangca. Explore the Cupids fandom, sourced news, fan conversations, and the moments behind Jeolee.">
-  <title>jeolee — about, news &amp; moments</title>
+  <title>jeolee — news &amp; moments</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="assets/pathway-extreme.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="assets/little-things.png" as="image">
@@ -14,6 +14,8 @@
   <script src="app.js?v=pink-2" defer></script>
   <script src="hub-data.js?v=pink-2" defer></script>
   <script src="hub.js?v=pink-2" defer></script>
+  <script type="module" src="/fandom-feeds.js"></script>
+  <link rel="stylesheet" href="/fandom-feeds.css">
   <link rel="stylesheet" href="/modern.css?v=pink-2">
 </head>
 <body>
@@ -21,7 +23,8 @@
   <header class="site-header">
     <a href="#browse" class="wordmark" aria-label="Jeolee home">jeolee</a>
     <nav aria-label="Main navigation">
-      <a href="#browse" data-view="browse" aria-current="page">About</a>
+      <a href="#browse" data-view="browse" aria-current="page">Home</a>
+      <a href="/about">About</a>
       <a href="#news">Updates</a>
       <a href="#library">Moments</a>
       <a href="/cupids">Cupids’ Space</a>
@@ -41,20 +44,14 @@
       <section class="hub-hero" aria-labelledby="hub-title">
         <img class="hub-hero-photo" src="assets/little-things.png" alt="Jeo helping Gehlee tie her bandana, surrounded by green leaves" width="1290" height="918" fetchpriority="high">
         <div class="hub-hero-shade"></div>
-        <div class="hub-hero-copy"><h1 id="hub-title">all about<br><span>jeolee.</span></h1><p>Jeo, Gehlee, and the moments that bring Cupids together.</p><div class="hub-actions"><a class="button button-red" href="#about-jeolee">Meet Jeo &amp; Gehlee</a><a class="button button-outline" href="#library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7z" fill="currentColor" stroke="none"/></svg>Explore moments</a></div></div>
-      </section>
-      <section id="about-jeolee" class="hub-quick-profiles" aria-label="Meet Jeo, Gehlee and the Cupids">
-        <article class="hub-person"><div class="hub-avatar hub-avatar-jeo" role="img" aria-label="Jeo Ong, from the supplied pair photo"></div><div><h2>Jeo Ong</h2><p>Content creator · Palawan</p><a href="#jeo-profile" data-profile="jeo-profile">Get to know Jeo<svg class="hub-link-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></div></article>
-        <article class="hub-person"><div class="hub-avatar hub-avatar-gehlee" role="img" aria-label="Gehlee Dangca, from the supplied pair photo"></div><div><h2>Gehlee Dangca</h2><p>Performer · Las Piñas</p><a href="#gehlee-profile" data-profile="gehlee-profile">Get to know Gehlee<svg class="hub-link-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></div></article>
-        <article class="hub-cupid-invite"><h2>This is Cupid territory.</h2><p>A little home for everyone cheering for Jeolee.</p><a href="/cupids">Explore Cupids’ Space<svg class="hub-link-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></article>
+        <div class="hub-hero-copy"><h1 id="hub-title">all about<br><span>jeolee.</span></h1><p>Jeo, Gehlee, and the moments that bring Cupids together.</p><div class="hub-actions"><a class="button button-red" href="/about">Meet Jeo &amp; Gehlee</a><a class="button button-outline" href="#library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7z" fill="currentColor" stroke="none"/></svg>Explore moments</a></div></div>
       </section>
       <section id="news" class="hub-news-section" aria-labelledby="hub-news-title">
         <div class="hub-loop-heading"><h2 id="hub-news-title">In the Jeolee loop</h2><button id="hub-view-all" class="text-button" aria-expanded="false" aria-controls="hub-update-list hub-feed-controls">View all updates</button></div>
         <div id="hub-feed-controls" hidden><p class="hub-feed-explanation">Publisher reports, fandom posts, and approved Cupid contributions. Every update keeps its source and original date.</p><div class="hub-feed-filters" role="group" aria-label="Filter news updates"><button data-hub-filter="all" aria-pressed="true">All updates</button><button data-hub-filter="coverage" aria-pressed="false">Coverage</button><button data-hub-filter="fandom" aria-pressed="false">Fandom posts</button><button data-hub-filter="community" aria-pressed="false">Cupid pages</button></div></div>
         <div class="hub-news-layout"><div class="hub-news-column"><div id="hub-update-list"></div><div id="hub-updates-empty" class="hub-empty" hidden><p>No approved updates in this view yet.</p><a href="/cupids#new=News">Contribute an update</a></div><a class="hub-text-link hub-news-contribute" href="/cupids#new=News">Share a sourced news update</a><div id="hub-feed-error" class="hub-feed-error" role="status" hidden>Community updates couldn’t load. The sourced stories above are still available. <button id="hub-feed-retry" class="text-button">Try again</button></div></div><aside class="hub-trends" aria-labelledby="hub-trends-title"><h2 id="hub-trends-title">What Cupids are<br>talking about</h2><p>Curated fandom topics.</p><div id="hub-topic-list"></div><a class="hub-text-link" href="/cupids#new=Trends">Suggest a fandom topic</a></aside></div>
       </section>
-      <section class="hub-section hub-more-about" aria-labelledby="about-title"><h2 id="about-title">Two people. One Jeolee.</h2><p>Jeolee is the fan-given name for Jeo Ong and Gehlee Dangca’s pairing on Pinoy Big Brother: Collab 3.0.</p><div class="hub-full-profiles"><details id="jeo-profile" class="hub-profile-details"><summary>Get to know Jeo</summary><div><h3>Jeo Ong</h3><p>A content creator introduced on PBB as “Ang Adventure Boy-Next-Door ng Palawan.” Viewers also know him through the OngFam family of vloggers.</p><a class="hub-source" href="https://www.newswatchplus.ph/2026/11/18/dama-mo-ba-the-jeo-gehlee-pbb-pairing-thats-taking-fans-by-storm/" target="_blank" rel="noopener noreferrer">Profile source · NewsWatch Plus</a></div></details><details id="gehlee-profile" class="hub-profile-details"><summary>Get to know Gehlee</summary><div><h3>Gehlee Dangca</h3><p>A Filipina performer known for UNIS and her solo music, including “Closer.” PBB introduced her as “Ang Darling K-Pop Idol ng Las Piñas.”</p><a class="hub-source" href="https://www.abs-cbn.com/entertainment/showbiz/movies-series/2026/10/25/pbb-collab-3-0-meet-the-kapamilya-housemates-1413" target="_blank" rel="noopener noreferrer">Profile source · ABS-CBN</a></div></details></div><p class="hub-photo-credit">Photographs from the supplied fan collection. Original photo credits are retained.</p></section>
-      <section id="fandoms" class="hub-section hub-last" aria-labelledby="hub-fandom-title"><div class="hub-section-heading"><h2 id="hub-fandom-title">Meet the fandom<span>.</span></h2></div><div class="hub-fandom-grid"><div class="hub-fandom-intro"><h3>Cupids.</h3><p>That’s us—the community cheering for Jeo and Gehlee, collecting the moments, and sharing the stories.</p><p>WITH JEOLEE introduced the fandom name on November 19, 2026.</p><a class="hub-source" href="https://x.com/withjeolee/status/2123419775921520949" target="_blank" rel="noopener noreferrer">Read the fandom-name reveal</a></div><div class="hub-directory"><h3>Known fanbases</h3><p>Independent Jeolee fan communities to follow.</p><div class="hub-fanbase"><div><h4>Jeolee Nation</h4><p>@jeoleenation</p></div><a href="https://x.com/jeoleenation" target="_blank" rel="noopener noreferrer">Visit on X</a></div><div class="hub-fanbase"><div><h4>Jeolee Official</h4><p>@official_jeolee</p></div><a href="https://x.com/official_jeolee" target="_blank" rel="noopener noreferrer">Visit on X</a></div><div class="hub-fanbase"><div><h4>With Jeolee</h4><p>@withjeolee</p></div><a href="https://x.com/withjeolee" target="_blank" rel="noopener noreferrer">Visit on X</a></div><p><a class="hub-source" href="https://www.newswatchplus.ph/2026/11/18/dama-mo-ba-the-jeo-gehlee-pbb-pairing-thats-taking-fans-by-storm/" target="_blank" rel="noopener noreferrer">Fanbase coverage · NewsWatch Plus, November 18</a></p></div></div><div class="hub-community"><div><h3>A little more to the story.</h3><p>Cupids’ Space is our shared Jeolee reference. Write a page, add a source, or suggest an edit. Every contribution goes through review.</p></div><a class="button button-outline" href="/cupids">Explore Cupids’ Space</a></div></section>
+      <section id="fandom-feeds" class="fandom-feeds" aria-labelledby="fandom-feed-title"><div class="fandom-feed-heading"><div><h2 id="fandom-feed-title">Straight from the fanbases.</h2><p>Public posts from Jeolee Nation, Jeolee Official, and With Jeolee.</p></div><button id="refresh-fandom-feed" class="text-button" type="button">Refresh feed</button></div><div id="fandom-feed-tabs" class="fandom-feed-tabs" role="tablist" aria-label="Choose a fandom account"></div><div id="fandom-feed-panel" role="tabpanel" tabindex="0"><a id="fandom-feed-source" class="fandom-feed-source" href="https://x.com/jeoleenation" target="_blank" rel="noopener noreferrer">View @jeoleenation on X</a><p id="fandom-feed-status" class="fandom-feed-status" role="status" aria-live="polite">Choose a feed to see posts from X.</p><div id="fandom-feed" class="fandom-feed"></div></div><p class="fandom-feed-note">Feeds load directly from X. While this page stays open, they reload at 12 noon and 12 midnight Philippine time; availability is controlled by X.</p><noscript><p><a href="https://x.com/jeoleenation">Jeolee Nation</a> · <a href="https://x.com/official_jeolee">Jeolee Official</a> · <a href="https://x.com/withjeolee">With Jeolee</a></p></noscript></section>
     </div>
     <div id="hub-library-heading" class="hub-library-heading"><h2>Moments on repeat.</h2><a href="#collections" data-view="collections">Browse collections</a></div>
 
@@ -124,7 +121,7 @@
     <form id="add-form">
       <label for="clip-url">X / Twitter post link</label><input id="clip-url" name="url" type="url" placeholder="https://x.com/username/status/…" required autocomplete="off" aria-describedby="add-error">
       <label for="clip-title">Give this moment a name</label><input id="clip-title" name="title" placeholder="the little things" maxlength="80" required>
-      <label for="clip-category">Collection</label><select id="clip-category" name="category"><option>Just Jeolee</option><option>Tinginan serye</option><option>Their soundtrack</option><option>Fan edits</option></select>
+      <label for="clip-category">Category</label><select id="clip-category" name="category"><option>Just Jeolee</option><option>Tinginan serye</option><option>Their soundtrack</option><option>Fan edits</option></select><div id="clip-suggestion" hidden><label for="clip-new-category">Suggested category name</label><input id="clip-new-category" name="suggestedCategory" maxlength="40" placeholder="e.g. bandana moments" aria-describedby="clip-suggestion-help" disabled><p id="clip-suggestion-help" class="category-suggestion-help">Your category suggestion will be reviewed with this clip.</p></div>
       <p id="add-error" class="form-error" role="alert"></p>
       <p class="storage-note">Submissions are reviewed before publishing.</p>
       <button class="button button-red button-large" type="submit">Submit for review</button>

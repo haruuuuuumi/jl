@@ -23,9 +23,9 @@ export function createApp(options={}){
   if(admin&&!adminPage&&!authEndpoint&&!authenticated&&url.pathname!=='/signin-with-chatgpt')return deny('Sign in to use admin.',401);
   if(url.pathname.startsWith('/api/'))return handleRequest(routed,runtime,ctx,{},baseline);
   if(url.pathname==='/signin-with-chatgpt')return Response.redirect(new URL('/admin',url),303);
-  if(url.pathname==='/admin/'||url.pathname==='/cupids/')return new Response(null,{status:308,headers:{location:url.pathname.slice(0,-1),'cache-control':'no-store'}});
+  if(url.pathname==='/admin/'||url.pathname==='/cupids/'||url.pathname==='/about/')return new Response(null,{status:308,headers:{location:url.pathname.slice(0,-1),'cache-control':'no-store'}});
   if(!['GET','HEAD'].includes(routed.method))return new Response('Method not allowed',{status:405,headers:{allow:'GET, HEAD','cache-control':'no-store'}});
-  const path=adminPage?(authenticated?'/admin.html':'/admin-login.html'):url.pathname==='/'?'/index.html':url.pathname==='/cupids'?'/cupids.html':url.pathname;
+  const path=adminPage?(authenticated?'/admin.html':'/admin-login.html'):url.pathname==='/'?'/index.html':url.pathname==='/cupids'?'/cupids.html':url.pathname==='/about'?'/about.html':url.pathname;
   // Visitors can browse and contribute anonymously. Admin files and APIs require
   // the password session. No visitor or owner account sign-in is required.
   // The build excludes source catalogs, provenance JSON and migration SQL.
