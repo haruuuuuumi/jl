@@ -125,3 +125,8 @@
   border-radius: 0;
   background: transparent;
 }
+
+.about-story { max-width: 68ch; margin-bottom: 36px; }
+.about-story h2 { font: 700 clamp(26px, 4vw, 36px)/1.2 Pathway, sans-serif; margin: 0 0 14px; }
+.about-story p { color: var(--muted); font-size: 17px; line-height: 1.7; margin: 0 0 12px; }
+.about-story p:last-child { margin-bottom: 0; }
