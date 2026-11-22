@@ -270,3 +270,19 @@ test('explicit image removal wins over a prefilled HTTPS image field',async()=>{
  const response=await app.fetch(req('/api/admin/updates/'+created.item.postId,null,{method:'PATCH',headers,body:JSON.stringify({...body,revision:1,removeImage:true})}),env,{});assert.equal(response.status,200);const item=(await response.json()).item;assert.equal(item.image,'');assert.equal(item.imageFromPost,false);
  }finally{DB.close();}
 });
+
+test('public pages and admin login reject third-party framing',async()=>{
+ const env={...baseEnv,ASSETS:assets};
+ for(const path of ['/','/moments','/admin']){
+  const response=await app.fetch(req(path),env,context);
+  assert.equal(response.headers.get('x-frame-options'),'DENY');
+  assert.match(response.headers.get('content-security-policy'),/frame-ancestors 'none'/);
+ }
+});
+test('video burst limit rejects requests before reaching X',async()=>{
+ const response=await app.fetch(req('/api/video?id=2124374963444723894',null,{headers:{'cf-connecting-ip':'203.0.113.10'}}),{
+  ...baseEnv,VIDEO_RATE_LIMITER:{async limit({key}){assert.equal(key,'203.0.113.10');return {success:false};}}
+ },context);
+ assert.equal(response.status,429);
+ assert.equal(response.headers.get('retry-after'),'60');
+});

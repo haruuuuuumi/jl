@@ -38,5 +38,15 @@
     "crons": [
       "0 4,16 * * *"
     ]
-  }
+  },
+  "ratelimits": [
+    {
+      "name": "VIDEO_RATE_LIMITER",
+      "namespace_id": "972401",
+      "simple": {
+        "limit": 60,
+        "period": 60
+      }
+    }
+  ]
 }

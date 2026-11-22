@@ -22,6 +22,14 @@ export function createApp(options={}){
   if(url.pathname.startsWith('/api/admin')&&!authEndpoint&&!authenticated)return new Response(JSON.stringify({error:'Sign in to use admin.'}),{status:401,headers:{'content-type':'application/json','cache-control':'no-store'}});
   const adminPage=['/admin','/admin/','/admin.html'].includes(url.pathname);
   if(admin&&!adminPage&&!authEndpoint&&!authenticated&&url.pathname!=='/signin-with-chatgpt')return deny('Sign in to use admin.',401);
+  // Bound bursts before the public video endpoint makes a request to X.
+  if(url.pathname==='/api/video'&&['GET','HEAD'].includes(request.method)&&env.VIDEO_RATE_LIMITER){
+   const key=request.headers.get('cf-connecting-ip')||'unknown';
+   const {success}=await env.VIDEO_RATE_LIMITER.limit({key});
+   if(!success)return new Response(JSON.stringify({error:'Too many video checks. Try again in a minute.'}),{
+    status:429,headers:{'content-type':'application/json','cache-control':'no-store','retry-after':'60','x-content-type-options':'nosniff'}
+   });
+  }
   const updates=await fandomUpdatesApi(routed,runtime,ctx,{fetchImpl:options.fetchFandomSource,bootstrapPosts:options.bootstrapPosts});if(updates)return updates;
   if(url.pathname.startsWith('/api/'))return handleRequest(routed,runtime,ctx,{},baseline);
   if(url.pathname==='/signin-with-chatgpt')return Response.redirect(new URL('/admin',url),303);
@@ -36,6 +44,10 @@ export function createApp(options={}){
   const asset=await env.ASSETS.fetch(assetRequest),responseHeaders=new Headers(asset.headers);
   responseHeaders.set('cache-control',!admin&&path.startsWith('/assets/')?'public, max-age=86400':'no-store');
   responseHeaders.set('x-content-type-options','nosniff');responseHeaders.set('referrer-policy','same-origin');
+  if(path.endsWith('.html')){
+   responseHeaders.set('Content-Security-Policy',"base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'");
+   responseHeaders.set('X-Frame-Options','DENY');
+  }
   return new Response(routed.method==='HEAD'?null:asset.body,{status:asset.status,statusText:asset.statusText,headers:responseHeaders});
  }};
 }
