@@ -40,7 +40,7 @@ export async function buildResponsiveImages(root,out){
           'resize',String(width),'--withoutEnlargement'],root);
         const size=(await stat(target)).size;
         if(size===0||size>=originalSize)throw new Error('Responsive image must be nonempty and smaller than its PNG: '+filename);
-        console.log(`Responsive image: assets/${filename} ${size} bytes (${(100*(1-size/originalSize)).toFixed(1)}% smaller than PNG)`);
+        console.log(`Responsive image: assets/optimized/${filename} ${size} bytes (${(100*(1-size/originalSize)).toFixed(1)}% smaller than PNG)`);
         count++;
       }
     }
