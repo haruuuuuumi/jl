@@ -2,13 +2,15 @@
 const $=(s,root=document)=>root.querySelector(s),$$=(s,root=document)=>[...root.querySelectorAll(s)],S=window.SiteUI,esc=value=>S.escape(value);
 const inCollection=(item,name)=>item.category===name||item.collections?.includes(name),collectionLabel=item=>category!=='all'&&inCollection(item,category)?category:item.category;
 const parsePost=value=>{try{const u=new URL(value.trim());if(!['https:','http:'].includes(u.protocol)||!['x.com','www.x.com','twitter.com','www.twitter.com','mobile.twitter.com'].includes(u.hostname.toLowerCase()))return null;const m=u.pathname.match(/^\/([A-Za-z0-9_]+|i\/web)\/status\/(\d{10,25})(?:\/video\/([1-4]))?\/?$/);return m?{id:m[2],mediaIndex:m[3]?Number(m[3]):null,url:'https://x.com'+u.pathname}:null;}catch{return null;}};
+const openingClip={"id":"where-it-all-started","title":"Where it all started","url":"https://x.com/4gehlee/status/2124429659014393945","kind":"clip","category":"Featured","creator":{"name":"4gehlee","handle":"4gehlee"}};
+const findMoment=id=>id===openingClip.id?openingClip:items.find(item=>item.id===id);
 let items=[],categoryRecords=[],category='all',query='',libraryReady=false,libraryError='',shown=24,embedGeneration=0,toastTimer,widgetPromise=null,searchTimer,viewerReturn=null,addReturn=null,routeClosing=false,openedId='';
 const viewer=$('#viewer'),addDialog=$('#add-dialog'),draftKey='jeolee:clip-draft:v2',receiptKey='jeolee:clip-receipt:v2';
 const videoIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7z"/></svg>',playIcon=videoIcon,photoIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m4 16 5-5 4 4 3-3 4 4"/></svg>';
 function notify(message){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('visible');toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3500);}
 function route(){const url=new URL(location.href),record=categoryRecords.find(c=>c.id===url.searchParams.get('collection')||c.name===url.searchParams.get('collection'));category=record?.name||'all';query=(url.searchParams.get('q')||'').slice(0,100);$('#search-input').value=query;
  for(const key of ['from','to','order'])$('#clip-'+key).value=url.searchParams.get(key)||'';
- shown=24;render();const id=url.searchParams.get('clip');if(id&&libraryReady){if(items.some(item=>item.id===id)){if(openedId!==id)openItem(id,false);}else notify('This moment is no longer in the published collection.');}else if(viewer.open){routeClosing=true;viewer.close();routeClosing=false;}}
+ shown=24;render();const id=url.searchParams.get('clip');if(id&&(libraryReady||id===openingClip.id)){if(findMoment(id)){if(openedId!==id)openItem(id,false);}else notify('This moment is no longer in the published collection.');}else if(viewer.open){routeClosing=true;viewer.close();routeClosing=false;}}
 function setRoute(replace=false){const url=new URL(location.href);const record=categoryRecords.find(c=>c.name===category);if(record)url.searchParams.set('collection',record.id);else url.searchParams.delete('collection');if(query)url.searchParams.set('q',query);else url.searchParams.delete('q');for(const key of ['from','to','order']){
  const value=$('#clip-'+key).value;
  if(value)url.searchParams.set(key,value);
@@ -85,7 +87,7 @@ async function playVideo(item){
 function syncDialogLock(){document.body.classList.toggle('dialog-open',viewer.open||addDialog.open);}
 
 function openItem(id,changeURL=true){
- const item=items.find(v=>v.id===id);if(!item)return;viewerReturn=document.activeElement;openedId=id;
+ const item=findMoment(id);if(!item)return;viewerReturn=document.activeElement;openedId=id;
  if(changeURL){const url=new URL(location.href);url.searchParams.set('clip',id);history.pushState({momentViewer:true},'',url);}
  $('#viewer-title').textContent=item.title+(item.mediaIndex>1?' — post preview':'');$('#viewer-description').textContent=item.description||(item.mediaCount>1?'This post has '+item.mediaCount+' videos. X’s embedded player starts with part 1; the original link opens the selected part.':item.kind==='photo'?'A photo from the Jeolee collection.':'');
  $('#viewer-type').textContent=collectionLabel(item)+' · '+(item.kind==='photo'?'Photo':item.mediaIndex>1?'X post preview':'Video')+(item.duration?' · '+item.duration:'');

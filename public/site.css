@@ -130,3 +130,21 @@
 .about-story h2 { font: 700 clamp(26px, 4vw, 36px)/1.2 Pathway, sans-serif; margin: 0 0 14px; }
 .about-story p { color: var(--muted); font-size: 17px; line-height: 1.7; margin: 0 0 12px; }
 .about-story p:last-child { margin-bottom: 0; }
+
+.moments-opening {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(16px, 3vw, 26px);
+  margin-bottom: 20px;
+  border: 1px solid #70465d;
+  border-radius: 18px;
+  background: #241923;
+}
+.moments-opening h2 {
+  margin: 0 0 8px;
+  font: 700 clamp(24px, 4vw, 38px)/1.1 Pathway, sans-serif;
+}
+.moments-opening .text-link { font-size: 14px; }
