@@ -81,7 +81,7 @@ function updateContent(input,base={}){
  const title=updateText(input.title,'Title',140),summary=updateText(input.summary,'Summary',1000,15),source=updateText(input.source,'Source',100),url=updateUrl(input.url,'source link');
  if(!['coverage','fandom','community'].includes(input.kind))updateError('Choose a valid update type.');
  const raw=updateText(input.date,'Publication date',10);if(!/^\d{4}-\d{2}-\d{2}$/.test(raw))updateError('Choose the original publication date.');const stamp=Date.parse(raw+'T12:00:00Z');if(!Number.isFinite(stamp)||new Date(stamp).toISOString().slice(0,10)!==raw)updateError('Choose a valid publication date.');
- const image=input.image?updateUrl(input.image,'image link'):input.removeImage===true?'':base.image||'',imageFromPost=input.image?true:image?!!base.imageFromPost:false;
+ const image=input.removeImage===true?'':input.image?updateUrl(input.image,'image link'):base.image||'',imageFromPost=!image?false:input.image&&input.image!==base.image?true:!!base.imageFromPost;
  return {...base,title,summary,source,url,kind:input.kind,label:{coverage:'Publisher report',fandom:'Fanbase post',community:'Cupid contribution'}[input.kind],date:raw,createdAt:new Date(stamp).toISOString(),image,imageFromPost,manual:true};
 }
 export async function fandomUpdatesApi(request,env,ctx,options={}){

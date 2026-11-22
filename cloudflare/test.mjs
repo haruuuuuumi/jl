@@ -263,3 +263,10 @@ test('editing seeded illustrative stories preserves their image and caption unti
  response=await app.fetch(req(endpoint,null,{method:'PATCH',headers,body:JSON.stringify({...body,revision:edited.revision,removeImage:true})}),env,{});assert.equal(response.status,200);assert.equal((await response.json()).item.image,'');
  }finally{DB.close();}
 });
+
+test('explicit image removal wins over a prefilled HTTPS image field',async()=>{
+ const DB=await localD1();try{const env={...baseEnv,DB},cookie=await login(env),headers={origin,'content-type':'application/json',cookie},body={title:'A story with a source image',summary:'A verified-source image accompanies this saved story.',source:'Test Publisher',kind:'coverage',url:'https://news.example.com/story',date:'2026-11-21',image:'https://pbs.twimg.com/media/source.jpg'};
+ const created=await (await app.fetch(req('/api/admin/updates',null,{...post(body),headers}),env,{})).json();
+ const response=await app.fetch(req('/api/admin/updates/'+created.item.postId,null,{method:'PATCH',headers,body:JSON.stringify({...body,revision:1,removeImage:true})}),env,{});assert.equal(response.status,200);const item=(await response.json()).item;assert.equal(item.image,'');assert.equal(item.imageFromPost,false);
+ }finally{DB.close();}
+});
