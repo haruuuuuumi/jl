@@ -1,62 +1,24 @@
 'use strict';
-const $ = (s,root=document) => root.querySelector(s);
-const $$ = (s,root=document) => [...root.querySelectorAll(s)];
-let categories=[],categoryRecords=[];
-const inCollection = (item,name) => item.category===name||item.collections?.includes(name);
-const collectionLabel = item => category!=='all'&&inCollection(item,category)?category:item.category;
-const parsePost = value => {
-  try {
-    const u = new URL(value.trim());
-    if(!['https:','http:'].includes(u.protocol) || !['x.com','www.x.com','twitter.com','www.twitter.com','mobile.twitter.com'].includes(u.hostname.toLowerCase())) return null;
-    const m = u.pathname.match(/^\/(?:[A-Za-z0-9_]+|i\/web)\/status\/(\d{10,25})(?:\/video\/([1-4]))?\/?$/);
-    if(!m) return null;
-    const mediaIndex=m[2]?Number(m[2]):null;
-    const key=m[1]+(mediaIndex?'/video/'+mediaIndex:'');
-    return {id:m[1],mediaIndex,key,url:'https://x.com'+u.pathname.split('/status/')[0]+'/status/'+key};
-  } catch {return null;}
-};
-let items=[],libraryReady=false,libraryError='';
-let category='all', query='', embedGeneration=0, toastTimer, widgetPromise=null;
-const viewer=$('#viewer'),addDialog=$('#add-dialog');
-const esc = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const videoIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7z"/></svg>';
-const playIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>';
-const photoIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m4 16 5-5 4 4 3-3 4 4"/><circle cx="15" cy="8" r="1"/></svg>';
+const $=(s,root=document)=>root.querySelector(s),$$=(s,root=document)=>[...root.querySelectorAll(s)],S=window.SiteUI,esc=value=>S.escape(value);
+const inCollection=(item,name)=>item.category===name||item.collections?.includes(name),collectionLabel=item=>category!=='all'&&inCollection(item,category)?category:item.category;
+const parsePost=value=>{try{const u=new URL(value.trim());if(!['https:','http:'].includes(u.protocol)||!['x.com','www.x.com','twitter.com','www.twitter.com','mobile.twitter.com'].includes(u.hostname.toLowerCase()))return null;const m=u.pathname.match(/^\/([A-Za-z0-9_]+|i\/web)\/status\/(\d{10,25})(?:\/video\/([1-4]))?\/?$/);return m?{id:m[2],mediaIndex:m[3]?Number(m[3]):null,url:'https://x.com'+u.pathname}:null;}catch{return null;}};
+let items=[],categoryRecords=[],category='all',query='',libraryReady=false,libraryError='',shown=24,embedGeneration=0,toastTimer,widgetPromise=null,searchTimer,viewerReturn=null,addReturn=null,routeClosing=false,openedId='';
+const viewer=$('#viewer'),addDialog=$('#add-dialog'),draftKey='jeolee:clip-draft:v2',receiptKey='jeolee:clip-receipt:v2';
+const videoIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7z"/></svg>',playIcon=videoIcon,photoIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m4 16 5-5 4 4 3-3 4 4"/></svg>';
 function notify(message){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('visible');toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3500);}
-function currentView(){return location.hash==='#collections'?'collections':'browse';}
+function route(){const url=new URL(location.href),record=categoryRecords.find(c=>c.id===url.searchParams.get('collection')||c.name===url.searchParams.get('collection'));category=record?.name||'all';query=(url.searchParams.get('q')||'').slice(0,100);$('#search-input').value=query;shown=24;render();const id=url.searchParams.get('clip');if(id&&libraryReady){if(items.some(item=>item.id===id)){if(openedId!==id)openItem(id,false);}else notify('This moment is no longer in the published collection.');}else if(viewer.open){routeClosing=true;viewer.close();routeClosing=false;}}
+function setRoute(replace=false){const url=new URL(location.href);const record=categoryRecords.find(c=>c.name===category);if(record)url.searchParams.set('collection',record.id);else url.searchParams.delete('collection');if(query)url.searchParams.set('q',query);else url.searchParams.delete('q');url.searchParams.delete('clip');url.searchParams.delete('submit');url.hash='';history[replace?'replaceState':'pushState'](null,'',url);shown=24;render();}
 function render(){
-  const view=currentView();
-  const home=view==='browse'&&!query;$('#hub-home').hidden=!home;$('#hub-library-heading').hidden=!home;
-  $$('[data-view]').forEach(a=>{if(a.dataset.view===view)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
-  const activeDestination=view==='collections'||query||location.hash==='#library'?'#library':location.hash==='#news'?'#news':'#browse';
-  $$('.site-header nav a').forEach(a=>{if(a.getAttribute('href')===activeDestination)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
-  $('#feature-stage').hidden=view!=='browse'||query.length>0;
-  $('#category-filters').hidden=view==='collections';
-  $('#collection-grid').hidden=view!=='collections';
-  $('#clip-grid').hidden=view==='collections';
-  $('#empty-state').hidden=true;
-  $$('.header-actions .add-trigger').forEach(b=>b.disabled=!libraryReady);
-  if(!libraryReady){$('#empty-action').classList.remove('add-trigger');$('#empty-action').disabled=false;$('#feature-stage').hidden=true;$('#category-filters').hidden=true;$('#collection-grid').hidden=true;$('#clip-grid').hidden=true;$('#library-title').textContent='Your next replay is on its way.';$('#library-caption').textContent='';$('#results-note').textContent='';$('#empty-state').hidden=false;$('#empty-title').textContent=libraryError?'The collection couldn’t load.':'Getting the collection ready.';$('#empty-description').textContent=libraryError||'Just a moment…';$('#empty-action').hidden=!libraryError;$('#empty-action').textContent='Try again';return;}
-  $('#empty-action').hidden=false;
-  $('#library-title').innerHTML=view==='collections'?'A collection for every mood<span>.</span>':query?'Find your moment<span>.</span>':'Pick your kind of kilig<span>.</span>';
-  $('#library-caption').textContent=view==='collections'?'a little something for every feeling.':'the moments we keep coming back to.';
-  if(view==='collections'){
-    $('#results-note').textContent='';
-    const covers=Object.fromEntries(categories.map(c=>[c,items.find(v=>inCollection(v,c)&&v.kind==='clip'&&v.image)?.image||'assets/together.png']));
-    $('#collection-grid').innerHTML=categories.map((c,i)=>{const count=items.filter(v=>inCollection(v,c)).length;return `<button class="collection-tile" data-collection="${esc(c)}"><img src="${esc(covers[c]||'assets/together.png')}" alt="" loading="lazy"><div><h3>${esc(c)}</h3><p>${count?`${count} ${count===1?'moment':'moments'}`:'Ready for a new moment'}</p></div></button>`;}).join('');
-  }else{
-    const filtered=items.filter(v=>(category==='all'||inCollection(v,category))&&(!query||(v.title+' '+v.category+' '+(v.collections||[]).join(' ')+' '+v.kind+' '+(v.duration||'')+' '+(v.creator?.handle||'')+' '+(v.creator?.name||'')).toLowerCase().includes(query)));
-    $('#results-note').textContent=query?`${filtered.length} ${filtered.length===1?'result':'results'} for “${$('#search-input').value.trim()}”`:'';
-    $('#clip-grid').innerHTML=filtered.map(v=>`<article class="moment"><button class="moment-art" data-open="${esc(v.id)}" aria-label="${v.kind==='clip'?(v.mediaIndex>1?'Open post preview:':v.duration?'Play video:':'Open X post:'):'Open photo:'} ${esc(v.title)}"><img src="${esc(v.image)}" alt="" loading="lazy"><span class="media-mark">${v.kind==='clip'?(v.mediaIndex>1?'Post preview':v.duration?'Video':'X post'):'Photo'}</span>${v.duration?`<span class="duration">${esc(v.duration)}</span>`:''}<span class="round-play" aria-hidden="true">${v.kind==='clip'?(v.duration?videoIcon:playIcon):photoIcon}</span></button><button class="moment-name" data-open="${esc(v.id)}">${esc(v.title)}</button><p class="moment-caption">${v.creator?`@${esc(v.creator.handle)} · `:''}${v.mediaIndex?`Part ${v.mediaIndex} · `:''}${esc(collectionLabel(v))}${v.custom?' · Added by you':''}</p></article>`).join('');
-    if(!filtered.length){
-      $('#empty-state').hidden=false;
-      $('#empty-title').textContent=query?'That moment is still out there.':'A little room for more.';
-      $('#empty-description').textContent=query?'Try a different title or collection.':'Add an X clip to start this collection.';
-      $('#empty-action').textContent=query?'Clear search':'Submit a clip';
-      $('#empty-action').classList.toggle('add-trigger',!query&&libraryReady);
-    }
-  }
-  $$('[data-filter]').forEach(b=>{const on=b.dataset.filter===category;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
+ $('#feature-stage').hidden=!!query||category!=='all'||!libraryReady;
+ $$('.add-trigger').forEach(button=>button.disabled=!libraryReady);
+ if(!libraryReady){$('#clip-grid').replaceChildren();$('#library-more').hidden=true;$('#category-filters').hidden=true;$('#results-note').textContent='';$('#empty-state').hidden=false;$('#empty-title').textContent=libraryError?'The collection couldn’t load.':'Getting the collection ready.';$('#empty-description').textContent=libraryError||'Just a moment…';$('#empty-action').hidden=!libraryError;$('#empty-action').textContent='Try again';return;}
+ $('#category-filters').hidden=false;
+ const lower=query.toLowerCase(),filtered=items.filter(item=>(category==='all'||inCollection(item,category))&&(!query||(item.title+' '+item.category+' '+(item.collections||[]).join(' ')+' '+(item.creator?.handle||'')+' '+(item.creator?.name||'')).toLowerCase().includes(lower))),visible=filtered.slice(0,shown);
+ $('#library-title').textContent=query?'Find your moment.':category==='all'?'Pick your kind of kilig.':category;
+ $('#results-note').textContent='Showing '+visible.length+' of '+filtered.length+' '+(filtered.length===1?'moment':'moments')+(query?' for “'+query+'”':'');
+ $('#clip-grid').innerHTML=visible.map(item=>{const label=item.kind==='photo'?'Photo':item.mediaIndex>1?'X post preview':item.duration?'Video':'X post';return '<article class="moment"><button class="moment-open" data-open="'+esc(item.id)+'" aria-label="'+esc((item.kind==='photo'?'Open photo: ':item.mediaIndex>1?'Open post preview: ':item.duration?'Play video: ':'Open X post: ')+item.title)+'"><span class="moment-art">'+S.picture(item.image,'')+'<span class="media-mark">'+label+'</span>'+(item.duration?'<span class="duration">'+esc(item.duration)+'</span>':'')+'<span class="round-play" aria-hidden="true">'+(item.kind==='photo'?photoIcon:videoIcon)+'</span></span><span class="moment-name">'+esc(item.title)+'</span></button><p class="moment-caption">'+(item.creator?'@'+esc(item.creator.handle)+' · ':'')+(item.mediaIndex?'Part '+item.mediaIndex+' · ':'')+esc(collectionLabel(item))+'</p></article>';}).join('');
+ $('#library-more').hidden=visible.length>=filtered.length;$('#empty-state').hidden=filtered.length>0;$('#empty-action').hidden=false;$('#empty-title').textContent='That moment is still out there.';$('#empty-description').textContent='Try another title, creator, or collection.';$('#empty-action').textContent='Show all moments';
+ $$('[data-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.filter===category)));S.onImageError($('#clip-grid'));
 }
 function stopVideo(){
   // Removing the iframe stops the embedded player, including its audio.
@@ -112,64 +74,45 @@ async function playVideo(item){
   }catch(error){clearTimeout(expire);if(generation!==embedGeneration)return;target.remove();videoFallback(item,error.message||'The X player could not load. Please try again.');}
 }
 function syncDialogLock(){document.body.classList.toggle('dialog-open',viewer.open||addDialog.open);}
-function openItem(id){
-  const item=items.find(v=>v.id===id);if(!item)return;
-  $('#viewer-title').textContent=item.title+(item.mediaIndex>1?' — post preview':'');$('#viewer-description').textContent=item.description||(item.kind==='clip'?(item.mediaCount>1?'This X post has '+item.mediaCount+' videos. Its embedded player starts with part 1.'+(item.mediaIndex>1?' Use the original part '+item.mediaIndex+' link above for this specific clip.':''):item.custom?'Added by you.':''):'A photo from the Jeolee collection.');
-  $('#viewer-type').textContent=item.mediaIndex>1?collectionLabel(item)+' · X post preview':collectionLabel(item)+' · '+(item.kind==='clip'?(item.duration?'Video':'X post'):'Photo')+(item.duration?' · '+item.duration:'');
-  $('#source-link').hidden=item.kind!=='clip';$('#source-link').href=item.url||'#';$('#source-link').textContent=item.mediaIndex?'Open video '+item.mediaIndex+' on X':'View original on X';
-  if(!viewer.open)viewer.showModal();syncDialogLock();
-  if(item.kind==='clip')playVideo(item);else{embedGeneration++;stopVideo();$('#creator-header').hidden=true;const image=document.createElement('img');image.src=item.image;image.alt=item.title+' — Jeo and Gehlee';$('#viewer-media').replaceChildren(image);}
+
+function openItem(id,changeURL=true){
+ const item=items.find(v=>v.id===id);if(!item)return;viewerReturn=document.activeElement;openedId=id;
+ if(changeURL){const url=new URL(location.href);url.searchParams.set('clip',id);history.pushState({momentViewer:true},'',url);}
+ $('#viewer-title').textContent=item.title+(item.mediaIndex>1?' — post preview':'');$('#viewer-description').textContent=item.description||(item.mediaCount>1?'This post has '+item.mediaCount+' videos. X’s embedded player starts with part 1; the original link opens the selected part.':item.kind==='photo'?'A photo from the Jeolee collection.':'');
+ $('#viewer-type').textContent=collectionLabel(item)+' · '+(item.kind==='photo'?'Photo':item.mediaIndex>1?'X post preview':'Video')+(item.duration?' · '+item.duration:'');
+ $('#source-link').hidden=item.kind!=='clip';$('#source-link').href=item.url||'#';$('#source-link').textContent=item.mediaIndex?'Open video '+item.mediaIndex+' on X':'View original on X';
+ $('#moment-link').value=new URL('/moments?clip='+encodeURIComponent(id),location.origin).href;$('#moment-link').hidden=true;
+ if(!viewer.open)viewer.showModal();syncDialogLock();
+ if(item.kind==='clip')playVideo(item);else{embedGeneration++;stopVideo();$('#creator-header').hidden=true;const image=document.createElement('img');image.src=item.image;image.alt=item.title+' — Jeo and Gehlee';$('#viewer-media').replaceChildren(image);}
 }
-function openAdd(){if(viewer.open)viewer.close();$('#add-error').textContent='';if(!addDialog.open)addDialog.showModal();syncDialogLock();}
-document.addEventListener('click',event=>{
-  const open=event.target.closest('[data-open]');if(open){openItem(open.dataset.open);return;}
-  const filter=event.target.closest('[data-filter]');if(filter){category=filter.dataset.filter;render();return;}
-  const collection=event.target.closest('[data-collection]');if(collection){category=collection.dataset.collection;if(currentView()!=='browse')location.hash='browse';else render();$('#library').scrollIntoView({behavior:'smooth'});return;}
-  const nav=event.target.closest('[data-view]');if(nav){event.preventDefault();category='all';query='';$('#search-input').value='';if(currentView()===nav.dataset.view){render();window.scrollTo({top:0,behavior:'smooth'});}else location.hash=nav.dataset.view;return;}
-  if(event.target.closest('.add-trigger')){openAdd();return;}
-});
-$('#empty-action').addEventListener('click',()=>{if(!libraryReady){loadSharedCatalog();return;}if(query){query='';$('#search-input').value='';render();$('#search-input').focus();}});
-$('.close-viewer').addEventListener('click',()=>viewer.close());$('#close-add').addEventListener('click',()=>addDialog.close());
-for(const dialog of [viewer,addDialog]){dialog.addEventListener('click',e=>{if(e.target===dialog){const rect=dialog.getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)dialog.close();}});dialog.addEventListener('close',()=>{if(dialog===viewer){embedGeneration++;stopVideo();$('#creator-header').replaceChildren();}syncDialogLock();});}
+function receipt(value){$('#clip-receipt').hidden=!value;if(value)$('#clip-receipt-detail').textContent='“'+value.title+'” · '+value.collection+' · Submitted '+S.date(value.submittedAt,true)+' PHT.';}
+function draftFields(){return {url:$('#clip-url').value,title:$('#clip-title').value,category:$('#clip-category').value,suggestedCategory:$('#clip-new-category').value};}
+function saveDraft(){const value=draftFields(),hasContent=!!(value.url.trim()||value.title.trim()||value.suggestedCategory.trim());if(!hasContent){S.remove(draftKey);$('#clip-draft-status').textContent='Unsent details are saved on this device.';$('#discard-clip-draft').hidden=true;return;}const saved=S.save(draftKey,value);$('#clip-draft-status').textContent=saved?'Draft saved on this device.':'Draft saving is unavailable. Keep this tab open until you submit.';$('#discard-clip-draft').hidden=false;}
+function restoreDraft(){const draft=S.read(draftKey);if(!draft)return false;$('#clip-url').value=draft.url||'';$('#clip-title').value=draft.title||'';if([...$('#clip-category').options].some(option=>option.value===draft.category))$('#clip-category').value=draft.category;$('#clip-new-category').value=draft.suggestedCategory||'';syncCategorySuggestion();$('#clip-draft-status').textContent='Your saved draft is back.';$('#discard-clip-draft').hidden=false;return true;}
+function openAdd(){addReturn=document.activeElement;if(viewer.open)viewer.close();$('#add-error').textContent='';const draft=restoreDraft(),last=S.read(receiptKey);receipt(last);$('#add-form').hidden=!!last&&!draft;if(!addDialog.open)addDialog.showModal();syncDialogLock();}
 function syncCategorySuggestion(focus=false){const suggesting=$('#clip-category').value==='__suggest_new__';$('#clip-suggestion').hidden=!suggesting;$('#clip-new-category').disabled=!suggesting;$('#clip-new-category').required=suggesting;if(suggesting&&focus)$('#clip-new-category').focus();}
-$('#clip-category').addEventListener('change',()=>syncCategorySuggestion(true));
-$('#add-form').addEventListener('submit',async event=>{
-  event.preventDefault();const post=parsePost($('#clip-url').value),title=$('#clip-title').value.trim();
-  if(!post){$('#add-error').textContent='Paste a full X video post link, including /status/ and the post number.';return;}
-  if(!title){$('#add-error').textContent='Give this moment a name first.';return;}
-  const suggesting=$('#clip-category').value==='__suggest_new__',suggestedCategory=$('#clip-new-category').value.trim();if(suggesting&&!suggestedCategory){$('#add-error').textContent='Give your suggested category a name.';return;}
-  const submit=$('#add-form button[type="submit"]');submit.disabled=true;submit.textContent='Submitting…';$('#add-error').textContent='';
-  try{
-    const response=await fetch('/api/submissions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:post.url,title,...(suggesting?{suggestedCategory}:{categoryId:$('#clip-category').value})})});
-    const data=await response.json();if(!response.ok)throw new Error(data.error||'This clip could not be submitted.');
-    $('#add-form').reset();syncCategorySuggestion();addDialog.close();notify('Submitted for review. It will appear after approval.');
-  }catch(error){$('#add-error').textContent=error.message||'This clip could not be submitted. Please try again.';}
-  finally{submit.disabled=false;submit.textContent='Submit for review';}
-});
-$('#search-toggle').addEventListener('click',()=>{const opening=$('#search-panel').hidden;$('#search-panel').hidden=!opening;$('#search-toggle').setAttribute('aria-expanded',String(opening));if(opening)$('#search-input').focus();});
-$('#search-close').addEventListener('click',()=>{$('#search-panel').hidden=true;$('#search-toggle').setAttribute('aria-expanded','false');query='';$('#search-input').value='';render();$('#search-toggle').focus();});
-$('#search-panel').addEventListener('submit',e=>e.preventDefault());$('#search-input').addEventListener('input',()=>{query=$('#search-input').value.trim().toLowerCase();if(currentView()==='collections')location.hash='browse';else render();});
-function scrollToView(){if(['#about-jeolee','#jeo-profile','#gehlee-profile','#fandoms'].includes(location.hash)){location.replace('/about'+location.hash);return;}const target=document.getElementById(location.hash.slice(1));const behavior=window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth';if(target)target.scrollIntoView({behavior,block:'start'});else window.scrollTo({top:0,behavior});}
-window.addEventListener('hashchange',()=>{render();scrollToView();});
-async function loadSharedCatalog(quiet=false){
-  if(!quiet){libraryError='';render();}
-  try{
-    const response=await fetch('/api/catalog',{cache:'no-store'});const data=await response.json();if(!response.ok)throw new Error(data.error||'Please try again.');
-    categoryRecords=data.categories;categories=categoryRecords.map(c=>c.name);items=data.items;
-    if(category!=='all'&&!categories.includes(category))category='all';
-    $('#category-filters').innerHTML=[{name:'All moments',value:'all'},...categories.map(name=>({name,value:name}))].map(c=>`<button class="filter" data-filter="${esc(c.value)}" aria-pressed="false">${esc(c.name)}</button>`).join('');
-    const selectedCategory=$('#clip-category').value;$('#clip-category').replaceChildren(...[...categoryRecords,{id:'__suggest_new__',name:'＋ Suggest a new category'}].map(c=>{const option=document.createElement('option');option.value=c.id;option.textContent=c.name;return option;}));if([...$('#clip-category').options].some(o=>o.value===selectedCategory))$('#clip-category').value=selectedCategory;syncCategorySuggestion();
-    libraryReady=true;libraryError='';syncFeaturedItems();render();if(!quiet&&location.hash)requestAnimationFrame(scrollToView);
-  }catch(error){if(!libraryReady){libraryError='Please refresh or try again in a moment.';render();}else if(!quiet)notify('The collection couldn’t refresh. Please try again.');}
-}
-function syncFeaturedItems(){
-  const clips=items.filter(v=>v.kind==='clip'&&v.duration);let fallback=0;
-  $$('#feature-stage [data-open]').forEach(button=>{
-    let item=items.find(v=>v.id===button.dataset.open);if(!item)item=clips[fallback++%Math.max(clips.length,1)];
-    button.hidden=!item;if(!item)return;button.dataset.open=item.id;
-    if(button.classList.contains('side-feature')){button.setAttribute('aria-label','Play '+item.title);$('.side-title',button).innerHTML=esc(item.title.toLowerCase())+'<span class="short-rule"></span>';$('.media-mark',button).textContent=(item.duration?item.duration+' · ':'')+'Video';$('img',button).src=item.image;}
-  });
-}
+document.addEventListener('click',event=>{const open=event.target.closest('[data-open]');if(open){openItem(open.dataset.open);return;}const filter=event.target.closest('[data-filter]');if(filter){category=filter.dataset.filter;setRoute();return;}if(event.target.closest('.add-trigger'))openAdd();});
+$('#library-more').addEventListener('click',()=>{const before=$$('#clip-grid .moment').length;shown+=24;render();const next=$$('#clip-grid .moment-open')[before];next?.focus({preventScroll:true});});
+$('#empty-action').addEventListener('click',()=>{if(!libraryReady)loadSharedCatalog();else{query='';category='all';$('#search-input').value='';setRoute();}});
+$('.close-viewer').addEventListener('click',()=>viewer.close());$('#close-add').addEventListener('click',()=>addDialog.close());
+for(const dialog of [viewer,addDialog]){dialog.addEventListener('click',event=>{if(event.target===dialog){const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();}});dialog.addEventListener('close',()=>{if(dialog===viewer){embedGeneration++;stopVideo();$('#creator-header').replaceChildren();openedId='';if(!routeClosing&&new URL(location.href).searchParams.has('clip')){if(history.state?.momentViewer)history.back();else{const url=new URL(location.href);url.searchParams.delete('clip');history.replaceState(null,'',url);}}if(viewerReturn?.isConnected)viewerReturn.focus({preventScroll:true});}else if(addReturn?.isConnected)addReturn.focus({preventScroll:true});syncDialogLock();});}
+$('#copy-moment-link').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#moment-link').value);notify('Moment link copied.');}catch{$('#moment-link').hidden=false;$('#moment-link').focus();$('#moment-link').select();notify('Copy the selected moment link.');}});
+$('#clip-category').addEventListener('change',()=>{syncCategorySuggestion(true);saveDraft();});$('#add-form').addEventListener('input',saveDraft);
+$('#discard-clip-draft').addEventListener('click',()=>{if(confirm('Discard this unsent clip draft?')){$('#add-form').reset();syncCategorySuggestion();S.remove(draftKey);saveDraft();}});
+$('#clip-submit-another').addEventListener('click',()=>{$('#clip-receipt').hidden=true;$('#add-form').hidden=false;$('#clip-url').focus();});
+$('#add-form').addEventListener('submit',async event=>{event.preventDefault();const post=parsePost($('#clip-url').value),title=$('#clip-title').value.trim();if(!post){$('#add-error').textContent='Paste a complete X video post link.';return;}if(!title){$('#add-error').textContent='Give this moment a name.';return;}const suggesting=$('#clip-category').value==='__suggest_new__',suggestedCategory=$('#clip-new-category').value.trim();if(suggesting&&!suggestedCategory){$('#add-error').textContent='Give your suggested collection a name.';return;}
+ const submit=$('#add-form button[type=submit]');submit.disabled=true;submit.textContent='Submitting…';$('#add-error').textContent='';
+ try{const response=await fetch('/api/submissions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:post.url,title,...(suggesting?{suggestedCategory}:{categoryId:$('#clip-category').value})})}),result=await response.json();if(!response.ok)throw Error(result.error||'This clip could not be submitted.');
+ const value={title,collection:suggesting?'Suggested collection: '+suggestedCategory:$('#clip-category').selectedOptions[0].textContent,submittedAt:Date.now(),reference:result.id};S.save(receiptKey,value);S.remove(draftKey);$('#add-form').reset();syncCategorySuggestion();saveDraft();$('#add-form').hidden=true;receipt(value);$('#clip-submit-another').focus();notify('Submitted for review.');
+ }catch(error){$('#add-error').textContent=error.message||'Please try again. Your draft is saved.';}finally{submit.disabled=false;submit.textContent='Submit for review';}});
+$('#search-panel').addEventListener('submit',event=>{event.preventDefault();clearTimeout(searchTimer);query=$('#search-input').value.trim().slice(0,100);setRoute(true);});
+$('#search-input').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{query=$('#search-input').value.trim().slice(0,100);setRoute(true);},160);});
+$('#search-close').addEventListener('click',()=>{clearTimeout(searchTimer);query='';$('#search-input').value='';setRoute();$('#search-input').focus();});
+window.addEventListener('popstate',route);
+async function loadSharedCatalog(quiet=false){if(!quiet){libraryError='';render();}try{const response=await fetch('/api/catalog',{cache:'no-store'}),data=await response.json();if(!response.ok)throw Error();items=data.items;categoryRecords=data.categories;$('#category-filters').innerHTML=[{name:'All moments',value:'all'},...categoryRecords.map(c=>({name:c.name,value:c.name}))].map(c=>'<button class="filter" data-filter="'+esc(c.value)+'" aria-pressed="false">'+esc(c.name)+'</button>').join('');
+ const selected=$('#clip-category').value;$('#clip-category').replaceChildren(...[...categoryRecords,{id:'__suggest_new__',name:'Suggest a new category'}].map(c=>{const option=document.createElement('option');option.value=c.id;option.textContent=c.name;return option;}));if([...$('#clip-category').options].some(o=>o.value===selected))$('#clip-category').value=selected;
+ libraryReady=true;libraryError='';syncCategorySuggestion();$$('[data-feature]').forEach((button,i)=>{const item=items.find(v=>v.id===button.dataset.open)||items.filter(v=>v.kind==='clip'&&v.duration&&!(v.mediaIndex>1))[i];button.hidden=!item;if(item){button.dataset.open=item.id;button.setAttribute('aria-label','Play '+item.title);$('img',button).src=item.image;$('.featured-title',button).innerHTML=esc(item.title)+'<small>'+esc(item.duration||'X post')+'</small>';}});
+ route();if(new URL(location.href).searchParams.has('submit')){const url=new URL(location.href);url.searchParams.delete('submit');history.replaceState(null,'',url);openAdd();}
+ }catch{if(!libraryReady){libraryError='Please try again. Other pages are still available from the menu.';render();}else if(!quiet)notify('The collection couldn’t refresh. Your current moments are still here.');}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!viewer.open&&!addDialog.open&&libraryReady)loadSharedCatalog(true);});
-if(['#about-jeolee','#jeo-profile','#gehlee-profile','#fandoms'].includes(location.hash))location.replace('/about'+location.hash);
 loadSharedCatalog();

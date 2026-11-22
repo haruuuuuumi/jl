@@ -14,6 +14,9 @@ jobs:
           cache-dependency-path: cloudflare/package-lock.json
       - run: npm ci --prefix cloudflare
       - run: npm test --prefix cloudflare
+      - run: node scripts/check-source.mjs
+      - run: npm install --no-save --prefix cloudflare jsdom@26.1.0
+      - run: node --test cloudflare/ui-test.mjs
       - run: node cloudflare/bundle.mjs
         env:
           WRANGLER_SEND_METRICS: 'false'

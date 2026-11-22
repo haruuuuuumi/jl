@@ -157,7 +157,7 @@ test('About Jeolee has its own public page and the homepage links to it',async()
 });
 
 test('public page footers contain only the requested management credit and use the JL icon',async()=>{
- for(const page of ['index.html','about.html','cupids.html']){const html=await readFile(new URL('../public/'+page,import.meta.url),'utf8'),footer=html.match(/<footer[\s\S]*?<\/footer>/)?.[0];assert.ok(footer.includes('Managed by Jeolee – Amats GDM'));assert.ok(!footer.includes('Netflix'));assert.ok(!footer.includes('/admin'));assert.ok(html.includes('favicon.svg?v=jl-2'));}
+ for(const page of ['index.html','about.html','moments.html','updates.html','cupids.html']){const html=await readFile(new URL('../public/'+page,import.meta.url),'utf8'),footer=html.match(/<footer[\s\S]*?<\/footer>/)?.[0];assert.ok(footer.includes('Managed by Jeolee – Amats GDM'));assert.ok(!footer.includes('Netflix'));assert.ok(!footer.includes('/admin'));assert.ok(html.includes('favicon.svg?v=jl-2'));}
  const home=await readFile(new URL('../public/index.html',import.meta.url),'utf8');assert.ok(!home.includes('for the plot. for the butterflies.'));assert.ok(!home.includes('Clips stay with their original creators on X.'));
  const icon=await readFile(new URL('../public/assets/favicon.svg',import.meta.url),'utf8');assert.ok(icon.includes('aria-label="JL"'));
 });
@@ -190,9 +190,9 @@ test('source failures preserve saved cards, record the failure, and respect back
   assert.equal((await syncFandomUpdates(env,{fetchImpl:fixtureSource(),now,bootstrapPosts:[]})).imported,3);
   let requests=0;const blocked=async()=>{requests++;return new Response('Unavailable',{status:403});};
   const failed=await syncFandomUpdates(env,{fetchImpl:blocked,now:now+120000,bootstrapPosts:[]});assert.equal(failed.outcome,'unavailable');assert.equal(failed.imported,0);assert.equal(requests,3);
-  const saved=await (await app.fetch(req('/api/updates'),env,context)).json();assert.equal(saved.items.length,3);assert.equal(saved.lastSuccessAt,now);assert.equal(saved.lastCheckFailed,true);
+  const saved=await (await app.fetch(req('/api/updates'),env,context)).json();assert.equal(saved.items.length,7);assert.equal(saved.lastSuccessAt,now);assert.equal(saved.lastCheckFailed,true);
   const paused=await syncFandomUpdates(env,{fetchImpl:blocked,now:now+180000,bootstrapPosts:[]});assert.equal(paused.outcome,'skipped');assert.equal(requests,3);
-  assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fandom_updates').get().n,3);
+  assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fandom_updates').get().n,7);
  }finally{DB.close();}
 });
 test('a rate-limited metadata source is not repeatedly requested during the same check',async()=>{
@@ -206,14 +206,14 @@ test('only the password-protected same-origin admin can manually run the reader'
  const cookie=await login(env);assert.equal((await readerApp.fetch(req('/api/admin/updates/sync',null,{...post({}),headers:{origin:'https://other.invalid','content-type':'application/json',cookie}}),env,context)).status,403);assert.equal(calls.length,0);
  const result=await (await readerApp.fetch(req('/api/admin/updates/sync',null,{...post({}),headers:{origin,'content-type':'application/json',cookie}}),env,context)).json();assert.equal(result.imported,3);const count=calls.length;
  const again=await (await readerApp.fetch(req('/api/admin/updates/sync',null,{...post({}),headers:{origin,'content-type':'application/json',cookie}}),env,context)).json();assert.equal(again.outcome,'recent');assert.equal(calls.length,count);
- const feed=await (await readerApp.fetch(req('/api/updates'),env,context)).json();assert.equal(feed.items.length,3);assert.equal(feed.errors,undefined);
+ const feed=await (await readerApp.fetch(req('/api/updates'),env,context)).json();assert.equal(feed.items.length,7);assert.equal(feed.errors,undefined);
  }finally{DB.close();}
 });
 test('public reads can start only one initial check and cron runs with the site closed',async()=>{
  const DB=await localD1();try{const calls=[],readerApp=createApp({fetchFandomSource:fixtureSource(calls),bootstrapPosts:[]}),env={...baseEnv,DB},work=[],ctx={waitUntil(p){work.push(p);}};
  await Promise.all([readerApp.fetch(req('/api/updates'),env,ctx),readerApp.fetch(req('/api/updates'),env,ctx)]);await Promise.all(work);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,3);
  await readerApp.fetch(req('/api/updates'),env,ctx);await Promise.all(work);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,3);
- await readerApp.scheduled({},env,ctx);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,6);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fandom_updates').get().n,3);
+ await readerApp.scheduled({},env,ctx);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,6);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fandom_updates').get().n,7);
  }finally{DB.close();}
 });
 test('server cron uses noon and midnight Philippine time and public updates use a saved-card carousel',async()=>{
@@ -226,4 +226,30 @@ test('an owner-supplied individual post is verified even if the profile pages ca
  const normal=fixtureSource(),post=fixturePosts[1];
  const result=await collectFandomUpdates({bootstrapPosts:[{handle:post.handle,id:post.id}],fetchImpl:async input=>new URL(input).hostname==='x.com'?new Response('Unavailable',{status:403}):normal(input)});
  assert.equal(result.profilesRead,0);assert.equal(result.errors.length,3);assert.equal(result.posts.length,1);assert.equal(result.posts[0].postId,post.id);assert.equal(result.posts[0].createdAt,post.created_at.replace('00Z','00.000Z'));
+});
+
+test('Moments and Updates are public destinations and slash aliases redirect',async()=>{
+ for(const page of ['moments','updates']){const response=await app.fetch(req('/'+page),{SITE_ORIGIN:origin,ASSETS:assets},{});assert.equal(response.status,200);assert.equal(await response.text(),'asset:/'+page+'.html');const redirect=await app.fetch(req('/'+page+'/'),{SITE_ORIGIN:origin,ASSETS:assets},{});assert.equal(redirect.status,308);assert.equal(redirect.headers.get('location'),'/'+page);}
+});
+test('admin can publish, edit, trash and restore sourced updates without exposing the write API',async()=>{
+ const DB=await localD1();try{
+  const env={...baseEnv,DB},body={title:'A sourced update',summary:'An original-source summary for the Cupids.',source:'Test Fanbase',kind:'fandom',url:'https://x.com/test/status/1000000000000000999',date:'2026-11-21',image:''};
+  assert.equal((await app.fetch(req('/api/admin/updates',null,post(body)),env,{})).status,401);const cookie=await login(env),headers={origin,'content-type':'application/json',cookie};
+  assert.equal((await app.fetch(req('/api/admin/updates',null,{...post(body),headers:{...headers,origin:'https://other.invalid'}}),env,{})).status,403);
+  for(const invalid of [{...body,url:'javascript:alert(1)'},{...body,date:'2026-02-31'},{...body,source:''}])assert.equal((await app.fetch(req('/api/admin/updates',null,{...post(invalid),headers}),env,{})).status,400);
+  const created=await app.fetch(req('/api/admin/updates',null,{...post(body),headers}),env,{});assert.equal(created.status,201);const item=(await created.json()).item;
+  const patch=(value)=>app.fetch(req('/api/admin/updates/'+item.postId,null,{method:'PATCH',headers,body:JSON.stringify(value)}),env,{});
+  assert.equal((await patch({...body,title:'A better title',revision:1})).status,200);assert.equal((await patch({...body,revision:1})).status,409);
+  const read=()=>app.fetch(req('/api/updates?kind=fandom'),env,{}).then(r=>r.json());
+  let feed=await read();assert.ok(feed.items.some(p=>p.title==='A better title'));assert.equal(feed.errors,undefined);
+  assert.equal((await patch({status:'deleted',revision:2})).status,200);feed=await read();assert.ok(!feed.items.some(p=>p.postId===item.postId));
+  assert.equal((await patch({status:'published',revision:3})).status,200);assert.ok((await read()).items.some(p=>p.postId===item.postId));
+ }finally{DB.close();}
+});
+test('the approved curated stories are migrated once and remain editable in admin',async()=>{
+ const DB=await localD1();try{
+  const env={...baseEnv,DB},feed=await (await app.fetch(req('/api/updates'),env,{})).json();assert.equal(feed.items.length,4);assert.ok(feed.items.every(item=>item.date.startsWith('2026-11-')));assert.equal(feed.lastSuccessAt,null);
+  const coverage=await (await app.fetch(req('/api/updates?kind=coverage&q=Zack'),env,{})).json();assert.equal(coverage.items.length,1);assert.equal(coverage.items[0].date,'2026-11-04');
+  const cookie=await login(env),admin=await (await app.fetch(req('/api/admin/updates',null,{headers:{cookie}}),env,{})).json();assert.equal(admin.items.length,4);assert.ok(admin.items.every(item=>item.revision===1));
+ }finally{DB.close();}
 });

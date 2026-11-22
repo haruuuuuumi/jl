@@ -2,6 +2,7 @@ import {readdir,readFile,writeFile,mkdir,rm,copyFile} from 'node:fs/promises';
 import {resolve,relative,extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {readBaseline} from '../catalog/source.mjs';
+import {buildResponsiveImages} from './images.mjs';
 const here=fileURLToPath(new URL('.',import.meta.url)),root=resolve(here,'..'),out=resolve(here,'build');
 await rm(out,{recursive:true,force:true});await mkdir(resolve(out,'assets'),{recursive:true});
 const allowed=new Set(['.html','.js','.css','.png','.jpg','.webp','.svg','.ttf','.txt']);
@@ -13,5 +14,6 @@ async function walk(dir){for(const entry of await readdir(dir,{withFileTypes:tru
  }else await copyFile(source,target);count++;
 }}
 await walk(resolve(root,'public'));
+await buildResponsiveImages(root,out);
 const baseline=await readBaseline(root);await writeFile(resolve(out,'catalog.mjs'),'export const baseline='+JSON.stringify(baseline)+';\n');
 console.log(`Cloudflare build: ${baseline.length} baseline cards, ${count} public static assets; admin is password protected.`);

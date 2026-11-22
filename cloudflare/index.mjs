@@ -25,9 +25,9 @@ export function createApp(options={}){
   const updates=await fandomUpdatesApi(routed,runtime,ctx,{fetchImpl:options.fetchFandomSource,bootstrapPosts:options.bootstrapPosts});if(updates)return updates;
   if(url.pathname.startsWith('/api/'))return handleRequest(routed,runtime,ctx,{},baseline);
   if(url.pathname==='/signin-with-chatgpt')return Response.redirect(new URL('/admin',url),303);
-  if(url.pathname==='/admin/'||url.pathname==='/cupids/'||url.pathname==='/about/')return new Response(null,{status:308,headers:{location:url.pathname.slice(0,-1),'cache-control':'no-store'}});
+  if(['/admin/','/cupids/','/about/','/moments/','/updates/'].includes(url.pathname))return new Response(null,{status:308,headers:{location:url.pathname.slice(0,-1),'cache-control':'no-store'}});
   if(!['GET','HEAD'].includes(routed.method))return new Response('Method not allowed',{status:405,headers:{allow:'GET, HEAD','cache-control':'no-store'}});
-  const path=adminPage?(authenticated?'/admin.html':'/admin-login.html'):url.pathname==='/'?'/index.html':url.pathname==='/cupids'?'/cupids.html':url.pathname==='/about'?'/about.html':url.pathname;
+  const path=adminPage?(authenticated?'/admin.html':'/admin-login.html'):url.pathname==='/'?'/index.html':url.pathname==='/cupids'?'/cupids.html':url.pathname==='/about'?'/about.html':url.pathname==='/moments'?'/moments.html':url.pathname==='/updates'?'/updates.html':url.pathname;
   // Visitors can browse and contribute anonymously. Admin files and APIs require
   // the password session. No visitor or owner account sign-in is required.
   // The build excludes source catalogs, provenance JSON and migration SQL.
