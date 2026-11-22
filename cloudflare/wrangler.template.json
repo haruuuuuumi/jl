@@ -17,7 +17,8 @@
     {
       "binding": "DB",
       "database_name": "jeolee-cupids",
-      "migrations_dir": "../drizzle"
+      "migrations_dir": "../drizzle",
+      "database_id": "a1fcb436-901a-4fa4-9bd7-928abf32654d"
     }
   ],
   "routes": [

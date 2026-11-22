@@ -34,13 +34,13 @@ If the build log says **Framework: Static**, **Output Directory: public**, or ru
 
 Before the first deployment:
 
-1. Create a **new D1 database** named `jeolee-cupids` in your account.
+1. The new **D1 database** `jeolee-cupids` is configured with the owner-provided ID `a1fcb436-901a-4fa4-9bd7-928abf32654d`. Its schema and content still need importing before cutover.
 2. Create a Cloudflare Access application for `jeoleecupids.com` with an Allow policy for **only your owner email**. Record its team hostname and application audience tag.
 3. Add these non-secret build variables in Cloudflare:
 
    | Variable | Value |
    | --- | --- |
-   | `CLOUDFLARE_D1_DATABASE_ID` | Your returned D1 UUID |
+   | `CLOUDFLARE_D1_DATABASE_ID` | Optional override; the owner-provided UUID is already configured |
    | `CLOUDFLARE_ACCESS_TEAM_DOMAIN` | Your `team.cloudflareaccess.com` hostname |
    | `CLOUDFLARE_ACCESS_AUD` | Your Access application's audience tag |
 
