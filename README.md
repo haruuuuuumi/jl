@@ -32,6 +32,8 @@ Create a Worker from this repository using these settings:
 
 If the build log says **Framework: Static**, **Output Directory: public**, or runs only `npx wrangler deploy`, the dashboard is using the repository root and the wrong deploy command. Update the settings above under **jl → Settings → Builds**. The root `wrangler.jsonc` deliberately rejects this setup so it cannot bypass the private Worker. Keep workers.dev and preview URLs disabled.
 
+The owner-provided database and Access identifiers are now recorded in the deployment template. `ADMIN_OWNER_EMAIL` and `ADMIN_AUTH_SECRET` must still be set as runtime secrets, and the private content export must be imported to retain existing moderation records.
+
 Before the first deployment:
 
 1. The new **D1 database** `jeolee-cupids` is configured with the owner-provided ID `a1fcb436-901a-4fa4-9bd7-928abf32654d`. Its schema and content still need importing before cutover.
@@ -41,10 +43,10 @@ Before the first deployment:
    | Variable | Value |
    | --- | --- |
    | `CLOUDFLARE_D1_DATABASE_ID` | Optional override; the owner-provided UUID is already configured |
-   | `CLOUDFLARE_ACCESS_TEAM_DOMAIN` | Your `team.cloudflareaccess.com` hostname |
-   | `CLOUDFLARE_ACCESS_AUD` | Your Access application's audience tag |
+   | `CLOUDFLARE_ACCESS_TEAM_DOMAIN` | Optional override; `soft-wood-39bf.cloudflareaccess.com` is configured |
+   | `CLOUDFLARE_ACCESS_AUD` | Optional override; the owner-provided application audience is configured |
 
-4. Configure a local deployment file and apply the SQL schema, following [the Cloudflare guide](cloudflare/README.md).
+4. The D1 ID, Access team domain and application audience are configured. `npm run deploy` generates the local deployment file and applies the versioned D1 schema migrations before publishing. No build-variable overrides are required for this account. See [the Cloudflare guide](cloudflare/README.md) for manual migration and private content import.
 5. Set the Worker runtime **secrets** `ADMIN_OWNER_EMAIL` (your allowed email) and `ADMIN_AUTH_SECRET` (a new strong random value). Enter these directly in Cloudflare; never commit them.
 6. Deploy, sign in through Access, and create your new-host admin password at `/admin`.
 

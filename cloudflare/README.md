@@ -15,13 +15,13 @@ Images/fonts are separate static assets rather than embedded in the Worker JavaS
 1. In the Worker’s **Settings → Builds**, use root directory `cloudflare`, build command `npm ci && npm run build`, and deploy command `npm run deploy`. The root Wrangler file blocks accidental static-only deployment. From this directory run `npm ci` and `npm run build`.
 2. The owner created the new D1 database `jeolee-cupids` and supplied ID `a1fcb436-901a-4fa4-9bd7-928abf32654d`, now recorded in the deployment template. Apply the schema and import content into this database only.
 3. Create a self-hosted Cloudflare Access application for `jeoleecupids.com`, with an Allow policy for only the existing site owner's email. Use email one-time PIN or the owner's configured identity provider. Record the returned team hostname and Application Audience tag. No broad email-domain or Everyone policy.
-4. Configure the local deployment file using those returned values:
+4. The owner-provided D1 ID, team domain (`soft-wood-39bf.cloudflareaccess.com`) and application audience are already in the template. CI needs no identifier overrides: `npm run deploy` generates the deployment file and applies pending schema migrations before publishing. To generate the local deployment file without deploying, run `node configure.mjs`. To override identifiers manually:
 
    ```sh
    node configure.mjs --database-id <returned-database-id> --team-domain <your-team.cloudflareaccess.com> --audience <returned-application-audience-tag>
    ```
 
-5. Apply the schema:
+5. `npm run deploy` now applies schema migrations automatically. To apply them manually before importing content:
 
    ```sh
    npm run db:migrate
