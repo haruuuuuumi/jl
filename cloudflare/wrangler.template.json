@@ -30,7 +30,7 @@
   "vars": {
     "SITE_ORIGIN": "https://jeoleecupids.com",
     "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": ""
+    "ACCESS_AUD": "c3f2f29db2585e6703ed8378f10eadca63a708ae6be84568e78c1b4aa71805f8"
   },
   "observability": {
     "enabled": true
