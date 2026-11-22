@@ -45,8 +45,19 @@ async function loadCatalogState(db,baseline){
  for(const item of entries.values()){const names=item.categoryIds.map(id=>categoryMap.get(id)?.name).filter(Boolean);item.category=names[0]||'Uncategorized';item.collections=names;delete item.custom;}
  return {categories,entries};
 }
+function manilaDay(timestamp){
+ return new Date(timestamp+8*60*60*1000).toISOString().slice(0,10);
+}
+function checkedClipDate(value){
+ if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))throw new CatalogError(400,'Choose a valid clip date.');
+ const timestamp=Date.parse(value+'T00:00:00+08:00');
+ if(!Number.isFinite(timestamp)||manilaDay(timestamp)!==value||value<'0001-01-01'||value>manilaDay(Date.now()))throw new CatalogError(400,'Choose today or an earlier clip date.');
+ return timestamp;
+}
 function publicCatalogItem(item){const {status,revision,createdAt,updatedAt,sourceKey,categoryIds,titleSource,suggestedCategory,...publicItem}=item;const post=parseCatalogPost(item.url);
- if(post){
+ if(item.clipDate){
+  publicItem.postedAt=Date.parse(item.clipDate+'T00:00:00+08:00');
+ }else if(post){
   const timestamp=Number((BigInt(post.id)>>22n)+1288834974657n);
   if(timestamp>1288834974657&&timestamp<=Date.now())publicItem.postedAt=timestamp;
  }
@@ -114,12 +125,13 @@ export async function catalogApi(request,env,baseline){
   }
   if(path==='/api/submissions'&&request.method==='POST'){
    await rateLimit(request,env,'submission',await validAdminSession(request,env)?60:5,600000);const body=await catalogBody(request),post=parseCatalogPost(body.url),title=cleanTitle(body.title);if(!post)throw new CatalogError(400,'Paste a full public X video post link.');
+   const clipDate=body.clipDate??manilaDay(Date.now());checkedClipDate(clipDate);
    const state=await loadCatalogState(db,baseline),suggestedCategory=body.suggestedCategory===undefined?null:cleanCategoryName(body.suggestedCategory);
    if(suggestedCategory&&body.categoryId)throw new CatalogError(400,'Choose an existing category or suggest a new one.');
    if(suggestedCategory&&state.categories.some(c=>categoryKey(c.name)===categoryKey(suggestedCategory)))throw new CatalogError(400,'That category already exists. Choose it from the list.');
    const categoryIds=suggestedCategory?[]:validatedCategoryIds([body.categoryId],state),video=await resolveSubmittedVideo(post),key=sourceKey({url:video.sourceUrl});
    if([...state.entries.values()].some(i=>i.sourceKey===key||i.mediaKey&&i.mediaKey===video.mediaKey))throw new CatalogError(409,'That video is already in the library or review queue.');
-   const id='submitted-'+crypto.randomUUID(),now=Date.now(),item={...video,id,title,url:video.sourceUrl,kind:'clip',...(suggestedCategory?{suggestedCategory}:{})};
+   const id='submitted-'+crypto.randomUUID(),now=Date.now(),item={...video,id,title,url:video.sourceUrl,kind:'clip',clipDate,...(suggestedCategory?{suggestedCategory}:{})};
    try{await db.prepare('INSERT INTO catalog_entries (id,source_key,media_key,title,item_json,category_ids,status,revision,created_at,updated_at) VALUES (?,?,?,?,?,?,\'pending\',1,?,?)').bind(id,key,video.mediaKey,title,JSON.stringify(item),JSON.stringify(categoryIds),now,now).run();}catch(error){if(String(error.message).includes('UNIQUE'))throw new CatalogError(409,'That video is already in the review queue.');throw error;}
    return catalogJson({id,status:'pending',message:'Submitted for review. It will appear after approval.'},201);
   }
@@ -145,7 +157,8 @@ export async function catalogApi(request,env,baseline){
    let createdCategory=null;
    if(newName){const existing=state.categories.find(c=>categoryKey(c.name)===categoryKey(newName));createdCategory=existing?null:{id:'category-'+crypto.randomUUID(),name:newName,position:Math.max(...state.categories.map(c=>c.position),0)+1};const id=existing?.id||createdCategory.id;if(!categoryIds.includes(id))categoryIds.push(id);}
    if(status==='published'&&!categoryIds.length)throw new CatalogError(400,'Choose an existing category or publish the suggested category.');
-   const now=Date.now(),storedItem={...publicCatalogItem(item),...(suggestedCategory&&status!=='published'?{suggestedCategory}:{})};
+   if(body.clipDate!==undefined)checkedClipDate(body.clipDate);
+   const now=Date.now(),storedItem={...publicCatalogItem(item),...(body.clipDate!==undefined?{clipDate:body.clipDate}:{}),...(suggestedCategory&&status!=='published'?{suggestedCategory}:{})};
    const entryStatement=item.revision===0?db.prepare('INSERT INTO catalog_entries (id,source_key,media_key,title,item_json,category_ids,status,revision,created_at,updated_at) VALUES (?,?,?,?,?,?,?,1,?,?) ON CONFLICT(id) DO NOTHING').bind(item.id,item.sourceKey,item.mediaKey||null,title,JSON.stringify(storedItem),JSON.stringify(categoryIds),status,now,now):db.prepare('UPDATE catalog_entries SET title=?,item_json=?,category_ids=?,status=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?').bind(title,JSON.stringify(storedItem),JSON.stringify(categoryIds),status,now,item.id,item.revision);
    let result;
    if(createdCategory){
