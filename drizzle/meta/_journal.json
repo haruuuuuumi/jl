@@ -43,6 +43,13 @@
       "when": 1795325434920,
       "tag": "0005_jeolee_tiktok_milestone",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1795327353427,
+      "tag": "0006_tiktok_milestone_photo",
+      "breakpoints": true
     }
   ]
 }

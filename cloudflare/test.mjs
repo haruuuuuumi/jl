@@ -250,7 +250,7 @@ test('the approved curated stories are migrated once and remain editable in admi
  const DB=await localD1();try{
   const env={...baseEnv,DB},feed=await (await app.fetch(req('/api/updates'),env,{})).json();assert.equal(feed.items.length,5);assert.equal(feed.items[0].postId,'2124374963444723894');assert.ok(feed.items.every(item=>item.date.startsWith('2026-11-')));assert.equal(feed.lastSuccessAt,null);
   const coverage=await (await app.fetch(req('/api/updates?kind=coverage&q=Zack'),env,{})).json();assert.equal(coverage.items.length,1);assert.equal(coverage.items[0].date,'2026-11-04');
-  const cookie=await login(env),admin=await (await app.fetch(req('/api/admin/updates',null,{headers:{cookie}}),env,{})).json();assert.equal(admin.items.length,5);assert.ok(admin.items.every(item=>item.revision===1));
+  const cookie=await login(env),admin=await (await app.fetch(req('/api/admin/updates',null,{headers:{cookie}}),env,{})).json();assert.equal(admin.items.length,5);assert.ok(admin.items.every(item=>item.revision===(item.postId==='2124374963444723894'?2:1)));
  }finally{DB.close();}
 });
 
