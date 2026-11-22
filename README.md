@@ -23,11 +23,14 @@ Create a Worker from this repository using these settings:
 
 | Setting | Value |
 | --- | --- |
+| Worker name | `jl` (matches the existing Cloudflare project) |
 | Production branch | `main` |
 | Root directory | `cloudflare` |
 | Build command | `npm ci && npm run build` |
 | Deploy command | `npm run deploy` |
 | Custom domain | `jeoleecupids.com` |
+
+If the build log says **Framework: Static**, **Output Directory: public**, or runs only `npx wrangler deploy`, the dashboard is using the repository root and the wrong deploy command. Update the settings above under **jl → Settings → Builds**. The root `wrangler.jsonc` deliberately rejects this setup so it cannot bypass the private Worker. Keep workers.dev and preview URLs disabled.
 
 Before the first deployment:
 

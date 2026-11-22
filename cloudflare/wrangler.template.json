@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "jeolee-cupids",
+  "name": "jl",
   "account_id": "84ba3f31259663c6c4edad4975e8ae3e",
   "main": "index.mjs",
   "compatibility_date": "2026-11-21",
@@ -13,16 +13,25 @@
     "html_handling": "none",
     "not_found_handling": "none"
   },
-  "d1_databases": [{
-    "binding": "DB",
-    "database_name": "jeolee-cupids",
-    "migrations_dir": "../drizzle"
-  }],
-  "routes": [{"pattern": "jeoleecupids.com", "custom_domain": true}],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jeolee-cupids",
+      "migrations_dir": "../drizzle"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "jeoleecupids.com",
+      "custom_domain": true
+    }
+  ],
   "vars": {
     "SITE_ORIGIN": "https://jeoleecupids.com",
     "ACCESS_TEAM_DOMAIN": "",
     "ACCESS_AUD": ""
   },
-  "observability": { "enabled": true }
+  "observability": {
+    "enabled": true
+  }
 }

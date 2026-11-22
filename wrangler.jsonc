@@ -1,0 +1,22 @@
+// Prevent automatic public/static deployment from the repository root.
+// The configured deployment uses cloudflare/wrangler.local.json through npm run deploy.
+{
+  "$schema": "./cloudflare/node_modules/wrangler/config-schema.json",
+  "name": "jl",
+  "account_id": "84ba3f31259663c6c4edad4975e8ae3e",
+  "main": "cloudflare/index.mjs",
+  "compatibility_date": "2026-11-21",
+  "workers_dev": false,
+  "preview_urls": false,
+  "build": {
+    "command": "node -e \"console.error('Cloudflare build settings need updating: root directory=cloudflare; build command=npm ci && npm run build; deploy command=npm run deploy. Configure D1 and Access first. Do not deploy public/ as a static site.'); process.exit(1)\""
+  },
+  "assets": {
+    "directory": "./cloudflare/build/assets",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
+  "routes": []
+}

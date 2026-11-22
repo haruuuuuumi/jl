@@ -1,6 +1,6 @@
 # Jeolee Cupids on your Cloudflare account
 
-Target: **https://jeoleecupids.com**. This deployment is independent of ChatGPT Sites and uses Cloudflare Workers, Static Assets, D1 and Access. The original live site is unchanged until cutover.
+Target: **https://jeoleecupids.com**. The Cloudflare Worker name is `jl`, matching the project already created in the dashboard; the D1 database remains `jeolee-cupids`. This deployment is independent of ChatGPT Sites and uses Cloudflare Workers, Static Assets, D1 and Access. The original live site is unchanged until cutover.
 
 ## Prepared and verified
 
@@ -12,7 +12,7 @@ Images/fonts are separate static assets rather than embedded in the Worker JavaS
 
 ## Once the Cloudflare account is connected
 
-1. From this directory run `npm ci` and `npm run build`.
+1. In the Worker’s **Settings → Builds**, use root directory `cloudflare`, build command `npm ci && npm run build`, and deploy command `npm run deploy`. The root Wrangler file blocks accidental static-only deployment. From this directory run `npm ci` and `npm run build`.
 2. Create a new empty D1 database in the selected account, named `jeolee-cupids`. Use its exact returned database ID. Do not import into another application's database.
 3. Create a self-hosted Cloudflare Access application for `jeoleecupids.com`, with an Allow policy for only the existing site owner's email. Use email one-time PIN or the owner's configured identity provider. Record the returned team hostname and Application Audience tag. No broad email-domain or Everyone policy.
 4. Configure the local deployment file using those returned values:
