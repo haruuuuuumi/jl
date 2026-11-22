@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Letters from Cupids about the little ways JeoLee made a difference.">
+  <title>Because of JeoLee — Jeolee Cupids</title>
+  <link rel="icon" href="/assets/favicon.svg?v=jl-2">
+  <link rel="stylesheet" href="/style.css?v=pink-2">
+  <link rel="stylesheet" href="/modern.css?v=pink-2">
+  <link rel="stylesheet" href="/site.css?v=mobile-nav-1">
+  <link rel="stylesheet" href="/stories.css">
+  <script src="/site-ui.js?v=structure-1" defer></script>
+  <script src="/stories.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#stories-main">Skip to stories</a>
+<header class="site-header"><a class="wordmark" href="/" aria-label="Jeolee home">jeolee</a><button class="button button-outline menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation">Menu</button><nav id="site-navigation" aria-label="Main navigation"><a href="/">Home</a><a href="/about">About</a><a href="/updates">Updates</a><a href="/moments">Moments</a><a href="/cupids">Cupids’ Space</a><a href="/because-of-jeolee" aria-current="page">Because of JeoLee</a><details class="contribute-menu"><summary>Contribute</summary><div class="contribute-options"><a href="/moments?submit=1">Submit a clip</a><a href="/cupids#new">Contribute a page</a><a href="/updates#suggest-update">Suggest an update</a></div></details></nav></header>
+<main id="stories-main" class="page-shell stories-page">
+  <section class="stories-intro" aria-labelledby="stories-title">
+    <h1 id="stories-title">Because of <span>JeoLee.</span></h1>
+    <p>Maybe you made a friend. Maybe you picked up an old hobby again. Maybe a clip made a hard day a little lighter. What changed for you because of JeoLee?</p>
+    <a href="#write-story" class="button button-red">Write your story</a>
+  </section>
+  <section aria-labelledby="letters-title">
+    <h2 id="letters-title">Letters from Cupids</h2>
+    <p id="story-list-status" role="status">Opening the mailbox…</p>
+    <div id="story-grid" class="story-grid"></div>
+    <button id="story-more" type="button" class="button button-outline" hidden>Load more letters</button>
+  </section>
+  <section id="write-story" class="story-compose" aria-labelledby="write-story-title">
+    <h2 id="write-story-title">Write your story</h2>
+    <p>Stories are reviewed before they appear here. Leave the username field blank to publish anonymously.</p>
+    <form id="story-form">
+      <label for="story-title">Title</label>
+      <input id="story-title" name="title" type="text" maxlength="100" required>
+      <label for="story-message">Your story</label>
+      <textarea id="story-message" name="story" rows="7" maxlength="2400" required placeholder="Because of JeoLee, I…"></textarea>
+      <label for="story-name">Username (optional)</label>
+      <input id="story-name" name="username" type="text" maxlength="40" autocomplete="off">
+      <p class="story-note">Only share details you’re comfortable making public.</p>
+      <button class="button button-red" type="submit">Send for review</button>
+      <p id="story-form-status" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+</main>
+<footer class="site-footer"><span>Managed by Jeolee – Amats GDM</span></footer>
+</body>
+</html>

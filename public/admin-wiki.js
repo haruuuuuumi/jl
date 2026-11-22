@@ -3,7 +3,7 @@
  const $=s=>document.querySelector(s),W=window.WikiUI;
  let status='pending',items=[],review=null,offset=0,sequence=0,active=false,loaded=false,busy=false,initialAttention=true;
  async function request(path,body,method){try{return await W.request(path,body,method);}catch(error){if([401,403].includes(error.status))window.dispatchEvent(new Event('admin:expired'));throw error;}}
- function selectArea(area){$('#clip-workspace').hidden=area!=='clips';$('#wiki-admin').hidden=area!=='wiki';$('#updates-admin').hidden=area!=='updates';document.querySelectorAll('[data-admin-area]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.adminArea===area)));if(area==='wiki'&&active&&!loaded)load();}
+ function selectArea(area){$('#clip-workspace').hidden=area!=='clips';$('#wiki-admin').hidden=area!=='wiki';$('#updates-admin').hidden=area!=='updates';$('#stories-admin').hidden=area!=='stories';document.querySelectorAll('[data-admin-area]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.adminArea===area)));if(area==='wiki'&&active&&!loaded)load();}
  async function load(more=false){
   if(!active)return;const current=++sequence;$('#wiki-admin-error').textContent='';$('#wiki-admin-results').textContent='Loading contributions…';$('#wiki-admin-more').disabled=true;
   try{const data=await request('/api/admin/wiki?'+new URLSearchParams({status,offset:String(more?offset:0)}),undefined,'GET');if(current!==sequence||!active)return;items=more?[...items,...data.items]:data.items;offset=items.length;loaded=true;

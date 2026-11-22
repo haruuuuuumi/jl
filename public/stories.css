@@ -1,0 +1,25 @@
+.stories-page { padding-bottom: 56px; }
+.stories-intro { padding: clamp(24px, 6vw, 68px) 0 40px; }
+.stories-intro h1 { margin: 0 0 16px; font: 700 clamp(46px, 8vw, 98px)/.98 Pathway, sans-serif; letter-spacing: -.035em; }
+.stories-intro h1 span { color: var(--pink, #f578bd); }
+.stories-intro p, .story-compose > p { max-width: 52ch; color: var(--muted); line-height: 1.6; }
+.stories-intro .button { margin-top: 8px; }
+.story-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; align-items: start; }
+.story-grid + button { margin-top: 16px; }
+.story-letter { border: 1px solid #70465d; border-radius: 14px; background: #241923; overflow-wrap: anywhere; }
+.story-letter summary { position: relative; isolation: isolate; min-height: 136px; padding: 20px; display: grid; align-content: center; justify-items: start; gap: 7px; cursor: pointer; list-style: none; overflow: hidden; border-radius: inherit; }
+.story-letter summary::-webkit-details-marker { display: none; }
+.story-letter summary::before { content: ""; position: absolute; z-index: -1; inset: 0; background: #372233; clip-path: polygon(0 0, 100% 0, 50% 82%); }
+.story-letter summary:focus-visible { outline: 2px solid var(--pink, #f578bd); outline-offset: 3px; }
+.story-letter-title { font-weight: 700; font-size: 20px; }
+.story-letter-byline, .story-note { color: var(--muted); font-size: 14px; }
+.story-letter-seal { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 50%; background: #f578bd; color: #241923; font-size: 14px; }
+.story-letter-body, .admin-story-body { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+.story-letter-body { margin: 0; padding: 16px 20px 20px; border-top: 1px solid #70465d; background: #211820; border-radius: 0 0 14px 14px; }
+.story-compose { margin-top: 42px; max-width: 680px; border-radius: 18px; padding: clamp(16px, 4vw, 30px); background: #19171d; scroll-margin-top: 20px; }
+.story-compose form label { display: block; margin: 14px 0 6px; font-weight: 600; }
+.story-compose input, .story-compose textarea { width: 100%; min-height: 44px; font: inherit; }
+.story-compose textarea { resize: vertical; padding: 12px; color: inherit; background: #242329; border: 1px solid #746979; border-radius: 12px; }
+#story-form-status:empty { display: none; }
+.admin-story-row { padding: 16px 0; border-bottom: 1px solid #493843; }
+.admin-story-row h2 { margin: 0; font-size: 20px; overflow-wrap: anywhere; }

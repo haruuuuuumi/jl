@@ -1,5 +1,6 @@
 import {getToken,extractVideo} from './video.mjs';
 import {wikiApi} from './wiki.mjs';
+import {storiesApi} from './stories.mjs';
 const defaultCatalogCategories=[
  {id:'just-jeolee',name:'Just Jeolee',position:0},{id:'tinginan-serye',name:'Tinginan serye',position:1},{id:'their-soundtrack',name:'Their soundtrack',position:2},{id:'fan-edits',name:'Fan edits',position:3}
 ];
@@ -87,9 +88,10 @@ async function resolveSubmittedVideo(post){
  video.mediaKey=match?match[1]:await sha256(selected.media_url_https);return video;
 }
 export async function catalogApi(request,env,baseline){
- const url=new URL(request.url),path=url.pathname;if(!path.startsWith('/api/catalog')&&!path.startsWith('/api/admin/')&&path!=='/api/submissions'&&!path.startsWith('/api/wiki'))return null;
+ const url=new URL(request.url),path=url.pathname;if(!path.startsWith('/api/catalog')&&!path.startsWith('/api/admin/')&&path!=='/api/submissions'&&!path.startsWith('/api/wiki')&&!path.startsWith('/api/stories'))return null;
  try{
   const db=requireCatalogDb(env);
+  if(path.startsWith('/api/stories')||path.startsWith('/api/admin/stories'))return await storiesApi(request,{db,json:catalogJson,fail:(status,message)=>{throw new CatalogError(status,message);},body:()=>catalogBody(request),write:()=>checkWriteOrigin(request),admin:()=>requireAdminSession(request,env),limit:()=>rateLimit(request,env,'story-submission',5,600000)});
   if(path.startsWith('/api/wiki')||path.startsWith('/api/admin/wiki'))return await wikiApi(request,env,{db,json:catalogJson,fail:(status,message)=>{throw new CatalogError(status,message);},body:()=>catalogBody(request,48000),write:()=>checkWriteOrigin(request),admin:()=>requireAdminSession(request,env),limit:()=>rateLimit(request,env,'wiki-submission',5,600000)});
   if(path==='/api/catalog'&&request.method==='GET'){const state=await loadCatalogState(db,baseline);return catalogJson({categories:state.categories,items:[...state.entries.values()].filter(i=>i.status==='published').map(publicCatalogItem)});}
   if(path==='/api/admin/session'&&request.method==='GET'){

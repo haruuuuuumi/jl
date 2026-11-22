@@ -286,3 +286,29 @@ test('video burst limit rejects requests before reaching X',async()=>{
  assert.equal(response.status,429);
  assert.equal(response.headers.get('retry-after'),'60');
 });
+
+test('Because of JeoLee stories stay private until approved and can be hidden again',async()=>{
+ const DB=await localD1();
+ try{
+  const env={...baseEnv,DB};
+  const path='/api/stories';
+  const adminPath='/api/admin/stories';
+  const payload={title:'A new friend',story:'Because of JeoLee, I made a friend.',username:'  '};
+  const submit=await app.fetch(req(path,null,post(payload)),env,context);
+  assert.equal(submit.status,201);
+  const {id}=await submit.json();
+  const list=async()=>await (await app.fetch(req(path),env,context)).json();
+  assert.deepEqual((await list()).items,[]);
+  assert.equal((await app.fetch(req(adminPath),env,context)).status,401);
+  const cookie=await login(env);
+  const pending=await (await app.fetch(req(adminPath,null,{headers:{cookie}}),env,context)).json();
+  assert.equal(pending.items[0].id,id);
+  assert.equal(pending.items[0].username,null);
+  const update=(status,revision)=>app.fetch(req(adminPath+'/'+id,null,{...post({status,revision},{cookie}),method:'PATCH'}),env,context);
+  assert.equal((await update('published',1)).status,200);
+  assert.deepEqual((await list()).items,[{id,title:payload.title,story:payload.story,username:null}]);
+  assert.equal((await update('hidden',1)).status,409);
+  assert.equal((await update('hidden',2)).status,200);
+  assert.deepEqual((await list()).items,[]);
+ }finally{DB.close();}
+});

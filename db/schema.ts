@@ -23,3 +23,7 @@ export const wikiProposals=sqliteTable('wiki_proposals',{
 
 export const fandomUpdates=sqliteTable('fandom_updates',{postId:text('post_id').primaryKey(),handle:text('handle').notNull(),itemJson:text('item_json').notNull(),postedAt:integer('posted_at').notNull(),importedAt:integer('imported_at').notNull(),status:text('status').notNull().default('published'),revision:integer('revision').notNull().default(1)},table=>[index('fandom_updates_posted_idx').on(table.postedAt)]);
 export const fandomUpdateState=sqliteTable('fandom_update_state',{id:integer('id').primaryKey(),leaseUntil:integer('lease_until').notNull().default(0),lockToken:text('lock_token').notNull().default(''),lastAttemptAt:integer('last_attempt_at'),lastSuccessAt:integer('last_success_at'),lastError:text('last_error').notNull().default(''),retryAfter:integer('retry_after').notNull().default(0)});
+
+export const cupidStories=sqliteTable('cupid_stories',{
+ id:text('id').primaryKey().notNull(),title:text('title').notNull(),story:text('story').notNull(),username:text('username'),status:text('status').notNull().default('pending'),revision:integer('revision').notNull().default(1),createdAt:integer('created_at').notNull()
+},table=>[index('cupid_stories_status_date_idx').on(table.status,table.createdAt,table.id)]);

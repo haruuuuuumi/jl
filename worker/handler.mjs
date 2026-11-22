@@ -25,7 +25,7 @@ export async function handleRequest(request, env, ctx, assets, baseline=[]) {
       return json(video);
     } catch {return json({error:'The video could not be checked right now. Please try again.'},502);}
   }
-  const path = url.pathname === '/' ? '/index.html' : ['/admin','/admin/'].includes(url.pathname)?'/admin.html':url.pathname==='/cupids'?'/cupids.html':url.pathname;
+  const path = url.pathname === '/' ? '/index.html' : ['/admin','/admin/'].includes(url.pathname)?'/admin.html':url.pathname==='/cupids'?'/cupids.html':url.pathname==='/because-of-jeolee'?'/because-of-jeolee.html':url.pathname;
   const asset = assets[path];
   if(!asset) return new Response('Not found',{status:404});
   const headers = {'content-type':asset.type,'cache-control':path.startsWith('/assets/')?'public, max-age=86400':'no-cache','x-content-type-options':'nosniff','etag':asset.etag,'referrer-policy':'same-origin'};
