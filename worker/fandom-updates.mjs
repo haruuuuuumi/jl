@@ -81,8 +81,8 @@ function updateContent(input,base={}){
  const title=updateText(input.title,'Title',140),summary=updateText(input.summary,'Summary',1000,15),source=updateText(input.source,'Source',100),url=updateUrl(input.url,'source link');
  if(!['coverage','fandom','community'].includes(input.kind))updateError('Choose a valid update type.');
  const raw=updateText(input.date,'Publication date',10);if(!/^\d{4}-\d{2}-\d{2}$/.test(raw))updateError('Choose the original publication date.');const stamp=Date.parse(raw+'T12:00:00Z');if(!Number.isFinite(stamp)||new Date(stamp).toISOString().slice(0,10)!==raw)updateError('Choose a valid publication date.');
- const image=input.image?updateUrl(input.image,'image link'):'';
- return {...base,title,summary,source,url,kind:input.kind,label:{coverage:'Publisher report',fandom:'Fanbase post',community:'Cupid contribution'}[input.kind],date:raw,createdAt:new Date(stamp).toISOString(),image,imageFromPost:!!image,manual:true};
+ const image=input.image?updateUrl(input.image,'image link'):input.removeImage===true?'':base.image||'',imageFromPost=input.image?true:image?!!base.imageFromPost:false;
+ return {...base,title,summary,source,url,kind:input.kind,label:{coverage:'Publisher report',fandom:'Fanbase post',community:'Cupid contribution'}[input.kind],date:raw,createdAt:new Date(stamp).toISOString(),image,imageFromPost,manual:true};
 }
 export async function fandomUpdatesApi(request,env,ctx,options={}){
  const url=new URL(request.url),path=url.pathname,publicFeed=path==='/api/updates',admin=path.startsWith('/api/admin/updates');if(!publicFeed&&!admin)return null;if(!env.DB)return json({error:'Updates are unavailable right now.'},503);
@@ -107,7 +107,7 @@ export async function fandomUpdatesApi(request,env,ctx,options={}){
   if(request.method!=='GET')return json({error:'This action is not available.'},405);
   const current=await state(env.DB);
   if(publicFeed){
-   const offset=Math.max(0,Math.min(100000,Number(url.searchParams.get('offset'))||0)),limit=30,q=(url.searchParams.get('q')||'').trim().toLowerCase().slice(0,100),kind=url.searchParams.get('kind')||'',source=(url.searchParams.get('source')||'').slice(0,100);
+   const offset=Math.max(0,Math.min(100000,Math.trunc(Number(url.searchParams.get('offset'))||0))),limit=30,q=(url.searchParams.get('q')||'').trim().toLowerCase().slice(0,100),kind=url.searchParams.get('kind')||'',source=(url.searchParams.get('source')||'').slice(0,100);
    const where="status='published' AND (?='' OR json_extract(item_json,'$.kind')=?) AND (?='' OR json_extract(item_json,'$.source')=?) AND (?='' OR instr(lower(json_extract(item_json,'$.title')||' '||json_extract(item_json,'$.summary')||' '||json_extract(item_json,'$.source')),?)>0)";
    const rows=await env.DB.prepare('SELECT item_json FROM fandom_updates WHERE '+where+' ORDER BY posted_at DESC,post_id DESC LIMIT ? OFFSET ?').bind(kind,kind,source,source,q,q,limit+1,offset).all();
    const sources=await env.DB.prepare("SELECT DISTINCT json_extract(item_json,'$.source') AS source FROM fandom_updates WHERE status='published' ORDER BY source LIMIT 100").all();
@@ -116,7 +116,7 @@ export async function fandomUpdatesApi(request,env,ctx,options={}){
    return json({items:rows.results.slice(0,limit).map(r=>JSON.parse(r.item_json)),hasMore:rows.results.length>limit,nextOffset:offset+Math.min(limit,rows.results.length),sources:sources.results.map(r=>r.source),latestStoryAt:newest?.value||null,lastAttemptAt:current?.last_attempt_at||null,lastSuccessAt:current?.last_success_at||null,lastCheckFailed:!!current?.last_error&&current.last_error!=='[]'});
   }
   if(path!=='/api/admin/updates')return json({error:'This update action was not found.'},404);
-  const offset=Math.max(0,Number(url.searchParams.get('offset'))||0),rows=await env.DB.prepare('SELECT * FROM fandom_updates ORDER BY imported_at DESC,post_id LIMIT 51 OFFSET ?').bind(offset).all();
+  const offset=Math.max(0,Math.min(100000,Math.trunc(Number(url.searchParams.get('offset'))||0))),rows=await env.DB.prepare('SELECT * FROM fandom_updates ORDER BY imported_at DESC,post_id LIMIT 51 OFFSET ?').bind(offset).all();
   return json({items:rows.results.slice(0,50).map(r=>({...JSON.parse(r.item_json),postId:r.post_id,status:r.status,revision:r.revision})),hasMore:rows.results.length>50,nextOffset:offset+Math.min(50,rows.results.length),lastAttemptAt:current?.last_attempt_at||null,lastSuccessAt:current?.last_success_at||null,errors:JSON.parse(current?.last_error||'[]'),nextCheck:Math.max(current?.retry_after||0,nextFandomCheck())});
  }catch(error){return json({error:error.status?error.message:'The update action could not finish. Saved posts were kept.'},error.status||503);}
 }

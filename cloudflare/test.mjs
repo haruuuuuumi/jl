@@ -253,3 +253,13 @@ test('the approved curated stories are migrated once and remain editable in admi
   const cookie=await login(env),admin=await (await app.fetch(req('/api/admin/updates',null,{headers:{cookie}}),env,{})).json();assert.equal(admin.items.length,4);assert.ok(admin.items.every(item=>item.revision===1));
  }finally{DB.close();}
 });
+
+test('editing seeded illustrative stories preserves their image and caption until explicitly removed',async()=>{
+ const DB=await localD1();try{const env={...baseEnv,DB},cookie=await login(env),headers={origin,'content-type':'application/json',cookie};
+ const listed=await (await app.fetch(req('/api/admin/updates',null,{headers:{cookie}}),env,{})).json(),item=listed.items.find(p=>p.image&&p.image.startsWith('assets/'));assert.ok(item);
+ const body={title:item.title+' revised',summary:item.summary,source:item.source,url:item.url,date:item.date,kind:item.kind,image:'',revision:item.revision};
+ const endpoint='/api/admin/updates/'+item.postId;
+ let response=await app.fetch(req(endpoint,null,{method:'PATCH',headers,body:JSON.stringify(body)}),env,{});assert.equal(response.status,200);let edited=(await response.json()).item;assert.equal(edited.image,item.image);assert.equal(edited.imageFromPost,false);
+ response=await app.fetch(req(endpoint,null,{method:'PATCH',headers,body:JSON.stringify({...body,revision:edited.revision,removeImage:true})}),env,{});assert.equal(response.status,200);assert.equal((await response.json()).item.image,'');
+ }finally{DB.close();}
+});
