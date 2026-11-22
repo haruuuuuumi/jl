@@ -162,3 +162,14 @@ test('free fandom feeds refresh at noon and midnight Philippine time without an 
  assert.equal(clock.nextFeedRefreshAt(beforeNoon),noon);assert.equal(clock.nextFeedRefreshAt(noon),midnight);assert.equal(clock.feedRefreshWindow(beforeNoon)+1,clock.feedRefreshWindow(noon));assert.equal(clock.feedRefreshWindow(noon)+1,clock.feedRefreshWindow(midnight));
  const home=await readFile(new URL('../public/index.html',import.meta.url),'utf8');assert.ok(home.includes('id="fandom-feed-tabs"'));assert.ok(home.includes('id="fandom-feed-source"'));
 });
+
+test('a hidden zero-size X placeholder is not a successfully loaded timeline',async()=>{
+ const source=await readFile(new URL('../public/fandom-feeds.js',import.meta.url),'utf8'),feed=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+ const frame=(width,height,style={})=>({getBoundingClientRect:()=>({width,height}),style,getAttribute:()=>null});
+ assert.equal(feed.timelineFrameReady(frame(0,0,{visibility:'hidden'})),false);assert.equal(feed.timelineFrameReady(frame(600,560,{visibility:'hidden'})),false);assert.equal(feed.timelineFrameReady(frame(600,560,{display:'none'})),false);assert.equal(feed.timelineFrameReady(frame(600,560)),true);
+});
+test('public page footers contain only the requested management credit and use the JL icon',async()=>{
+ for(const page of ['index.html','about.html','cupids.html']){const html=await readFile(new URL('../public/'+page,import.meta.url),'utf8'),footer=html.match(/<footer[\s\S]*?<\/footer>/)?.[0];assert.ok(footer.includes('Managed by Jeolee – Amats GDM'));assert.ok(!footer.includes('Netflix'));assert.ok(!footer.includes('/admin'));assert.ok(html.includes('favicon.svg?v=jl-2'));}
+ const home=await readFile(new URL('../public/index.html',import.meta.url),'utf8');assert.ok(!home.includes('for the plot. for the butterflies.'));assert.ok(!home.includes('Clips stay with their original creators on X.'));
+ const icon=await readFile(new URL('../public/assets/favicon.svg',import.meta.url),'utf8');assert.ok(icon.includes('aria-label="JL"'));
+});
