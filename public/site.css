@@ -39,4 +39,4 @@
 @media(prefers-reduced-motion:reduce){.featured-moments,#hub-update-list{scroll-behavior:auto}}
 
 /* Keep both smiles visible in the user-selected About photograph at every width. */
-.about-intro img.about-photo{aspect-ratio:4/3;object-position:50% 58%}
+.about-intro img.about-photo{height:auto;aspect-ratio:4/3;object-position:50% 58%}
