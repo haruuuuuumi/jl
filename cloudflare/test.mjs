@@ -190,9 +190,9 @@ test('source failures preserve saved cards, record the failure, and respect back
   assert.equal((await syncFandomUpdates(env,{fetchImpl:fixtureSource(),now,bootstrapPosts:[]})).imported,3);
   let requests=0;const blocked=async()=>{requests++;return new Response('Unavailable',{status:403});};
   const failed=await syncFandomUpdates(env,{fetchImpl:blocked,now:now+120000,bootstrapPosts:[]});assert.equal(failed.outcome,'unavailable');assert.equal(failed.imported,0);assert.equal(requests,3);
-  const saved=await (await app.fetch(req('/api/updates'),env,context)).json();assert.equal(saved.items.length,7);assert.equal(saved.lastSuccessAt,now);assert.equal(saved.lastCheckFailed,true);
+  const saved=await (await app.fetch(req('/api/updates'),env,context)).json();assert.equal(saved.items.length,8);assert.equal(saved.lastSuccessAt,now);assert.equal(saved.lastCheckFailed,true);
   const paused=await syncFandomUpdates(env,{fetchImpl:blocked,now:now+180000,bootstrapPosts:[]});assert.equal(paused.outcome,'skipped');assert.equal(requests,3);
-  assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fandom_updates').get().n,7);
+  assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fandom_updates').get().n,8);
  }finally{DB.close();}
 });
 test('a rate-limited metadata source is not repeatedly requested during the same check',async()=>{
@@ -206,14 +206,14 @@ test('only the password-protected same-origin admin can manually run the reader'
  const cookie=await login(env);assert.equal((await readerApp.fetch(req('/api/admin/updates/sync',null,{...post({}),headers:{origin:'https://other.invalid','content-type':'application/json',cookie}}),env,context)).status,403);assert.equal(calls.length,0);
  const result=await (await readerApp.fetch(req('/api/admin/updates/sync',null,{...post({}),headers:{origin,'content-type':'application/json',cookie}}),env,context)).json();assert.equal(result.imported,3);const count=calls.length;
  const again=await (await readerApp.fetch(req('/api/admin/updates/sync',null,{...post({}),headers:{origin,'content-type':'application/json',cookie}}),env,context)).json();assert.equal(again.outcome,'recent');assert.equal(calls.length,count);
- const feed=await (await readerApp.fetch(req('/api/updates'),env,context)).json();assert.equal(feed.items.length,7);assert.equal(feed.errors,undefined);
+ const feed=await (await readerApp.fetch(req('/api/updates'),env,context)).json();assert.equal(feed.items.length,8);assert.equal(feed.errors,undefined);
  }finally{DB.close();}
 });
 test('public reads can start only one initial check and cron runs with the site closed',async()=>{
  const DB=await localD1();try{const calls=[],readerApp=createApp({fetchFandomSource:fixtureSource(calls),bootstrapPosts:[]}),env={...baseEnv,DB},work=[],ctx={waitUntil(p){work.push(p);}};
  await Promise.all([readerApp.fetch(req('/api/updates'),env,ctx),readerApp.fetch(req('/api/updates'),env,ctx)]);await Promise.all(work);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,3);
  await readerApp.fetch(req('/api/updates'),env,ctx);await Promise.all(work);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,3);
- await readerApp.scheduled({},env,ctx);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,6);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fandom_updates').get().n,7);
+ await readerApp.scheduled({},env,ctx);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,6);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fandom_updates').get().n,8);
  }finally{DB.close();}
 });
 test('server cron uses noon and midnight Philippine time and public updates use a saved-card carousel',async()=>{
@@ -248,9 +248,9 @@ test('admin can publish, edit, trash and restore sourced updates without exposin
 });
 test('the approved curated stories are migrated once and remain editable in admin',async()=>{
  const DB=await localD1();try{
-  const env={...baseEnv,DB},feed=await (await app.fetch(req('/api/updates'),env,{})).json();assert.equal(feed.items.length,4);assert.ok(feed.items.every(item=>item.date.startsWith('2026-11-')));assert.equal(feed.lastSuccessAt,null);
+  const env={...baseEnv,DB},feed=await (await app.fetch(req('/api/updates'),env,{})).json();assert.equal(feed.items.length,5);assert.equal(feed.items[0].postId,'2124374963444723894');assert.ok(feed.items.every(item=>item.date.startsWith('2026-11-')));assert.equal(feed.lastSuccessAt,null);
   const coverage=await (await app.fetch(req('/api/updates?kind=coverage&q=Zack'),env,{})).json();assert.equal(coverage.items.length,1);assert.equal(coverage.items[0].date,'2026-11-04');
-  const cookie=await login(env),admin=await (await app.fetch(req('/api/admin/updates',null,{headers:{cookie}}),env,{})).json();assert.equal(admin.items.length,4);assert.ok(admin.items.every(item=>item.revision===1));
+  const cookie=await login(env),admin=await (await app.fetch(req('/api/admin/updates',null,{headers:{cookie}}),env,{})).json();assert.equal(admin.items.length,5);assert.ok(admin.items.every(item=>item.revision===1));
  }finally{DB.close();}
 });
 

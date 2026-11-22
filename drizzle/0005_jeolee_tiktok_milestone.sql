@@ -1,0 +1,3 @@
+INSERT INTO fandom_updates (post_id, handle, item_json, posted_at, imported_at, status, revision)
+VALUES ('2124374963444723894', '_gehleeya', '{"id":"x-2124374963444723894","postId":"2124374963444723894","handle":"_gehleeya","title":"Jeolee hits 5 billion views on TikTok!","summary":"A fan update from @_gehleeya celebrates Jeolee reaching 5 billion views on TikTok.","createdAt":"2026-11-22T05:30:34.920Z","date":"2026-11-22","source":"@_gehleeya","kind":"fandom","label":"Fanbase post","url":"https://x.com/_gehleeya/status/2124374963444723894","manual":true}', 1795325434920, 1795325434920, 'published', 1)
+ON CONFLICT(post_id) DO NOTHING;
