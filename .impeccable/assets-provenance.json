@@ -1,0 +1,708 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-11-22",
+  "sourceCommit": "6d68a7502bb3cc1021341edc1d4a25fb1a4c214b",
+  "scope": "Every repository raster copied by the current public build, plus the twelve responsive derivatives. External runtime images and media retain their catalog/source attribution; this manifest does not verify those remote files.",
+  "evidencePolicy": "User-supplied attribution is limited to the two confirmed source PNGs. Other historical rasters are recorded as inherited-unverified, even where older metadata exists. No author, license, rights, or generated/non-generated origin is inferred for those historical assets.",
+  "transformation": {
+    "implementation": "cloudflare/images.mjs",
+    "invokedBy": "cloudflare/build.mjs",
+    "encoder": "sharp-cli@5.2.0",
+    "widths": [
+      480,
+      960,
+      1280
+    ],
+    "formats": [
+      {
+        "name": "webp",
+        "quality": 80
+      },
+      {
+        "name": "avif",
+        "quality": 55
+      }
+    ],
+    "effort": 4,
+    "withoutEnlargement": true,
+    "originalsPreserved": true,
+    "newGeneratedArtwork": false,
+    "operation": "Resize and encode retained originals; no generative image tool or artwork generation is involved.",
+    "validation": "The build rejects empty outputs or outputs whose byte size is not smaller than their source PNG. This documentation does not independently certify a completed build or rendered visual output.",
+    "outputLocation": "cloudflare/build/assets/assets/optimized",
+    "publicUrlPrefix": "/assets/optimized/"
+  },
+  "originalsAndInheritedRasters": [
+    {
+      "path": "public/assets/blossoms.webp",
+      "gitBlobSha": "9cf9c8f6e66ab40ad9dcf842f828ea1e4085f277",
+      "byteSize": 116768,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/blossoms.webp.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/close-up.png",
+      "gitBlobSha": "49ffc785823f97e378a032015203dc094f058465",
+      "byteSize": 188867,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified."
+    },
+    {
+      "path": "public/assets/couch.png",
+      "gitBlobSha": "014fcb1e7413bd72fe6c47d57a13e435f3fac9c7",
+      "byteSize": 186045,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified."
+    },
+    {
+      "path": "public/assets/little-things.png",
+      "gitBlobSha": "d970c20d298c677136f55ecf95cd1aba4a668e50",
+      "byteSize": 1392751,
+      "provenance": "user-supplied-original",
+      "evidence": "User-supplied originals confirmed in this implementation handoff.",
+      "retainedFullSize": true
+    },
+    {
+      "path": "public/assets/together.png",
+      "gitBlobSha": "c61c5416814c8ebcd0fc233f7b61d8b39534cb05",
+      "byteSize": 3628766,
+      "provenance": "user-supplied-original",
+      "evidence": "User-supplied originals confirmed in this implementation handoff.",
+      "retainedFullSize": true
+    },
+    {
+      "path": "public/assets/video-thumbnails/0ed19762db8fddba7404.jpg",
+      "gitBlobSha": "3dbf241aa16cb64c63764965077b146778050346",
+      "byteSize": 90913,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/0ed19762db8fddba7404.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/20b852f6dc370d0dec99.jpg",
+      "gitBlobSha": "5243d5d44eae9767cfeb31e2d39d46e5bbaa539b",
+      "byteSize": 68980,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/20b852f6dc370d0dec99.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2118091983550058496.jpg",
+      "gitBlobSha": "686c1e720d559210dd768d09deb301ab9e3bbabd",
+      "byteSize": 54610,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2118091983550058496.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2119164370165055488.jpg",
+      "gitBlobSha": "690c89f8adddbc8bfddc05a6bd8b4d9e7d64e3bd",
+      "byteSize": 65525,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2119164370165055488.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2119944153677389824.jpg",
+      "gitBlobSha": "8cc6769ab03c8f5cd1388c20fb6d1459454ecc67",
+      "byteSize": 59962,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2119944153677389824.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121431363740127232.jpg",
+      "gitBlobSha": "814f37b649e832d9fb165c725eab9c53e99a9a7a",
+      "byteSize": 36395,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121431363740127232.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121443448880553984.jpg",
+      "gitBlobSha": "062fa83616c9c908376d48919d8ba9b70c956a26",
+      "byteSize": 61628,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121443448880553984.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121454821446483968.jpg",
+      "gitBlobSha": "35b0e5e4ab380d0027dbfa2fa6108b760e6834a1",
+      "byteSize": 127328,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121454821446483968.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121472688393015296.jpg",
+      "gitBlobSha": "6ab5189eddb81700cc6431d066841401c75ac474",
+      "byteSize": 63765,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121472688393015296.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121475210146992128.jpg",
+      "gitBlobSha": "fe188a6e5e1df17a4147da40e4014477623d8e9b",
+      "byteSize": 67237,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121475210146992128.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121488733514137600.jpg",
+      "gitBlobSha": "0d16c491d3b881a4466f2d2dcc23a8cc02488323",
+      "byteSize": 77195,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121488733514137600.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121488804125331456.jpg",
+      "gitBlobSha": "3426939d14f123574c73fb4af748090152e7099e",
+      "byteSize": 7526,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121488804125331456.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121488854528196608.jpg",
+      "gitBlobSha": "78ac76775fe3179a01d4062b3b49193ba361cc69",
+      "byteSize": 9470,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121488854528196608.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121488901202432000.jpg",
+      "gitBlobSha": "841ae223337ff4d604731bb531a3a43b0bee1214",
+      "byteSize": 61816,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121488901202432000.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121637015792058368.jpg",
+      "gitBlobSha": "45e336ff1a9e78b1031180e9e44a8132e42134f4",
+      "byteSize": 41160,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121637015792058368.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121656067411292160.jpg",
+      "gitBlobSha": "87565c32ee00e8cf17fc1ca641087c17e11ac043",
+      "byteSize": 23254,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121656067411292160.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121774534525407232.jpg",
+      "gitBlobSha": "d14b5d8d6e7a0e82ab8ced84a05ece0f74f8430b",
+      "byteSize": 52745,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121774534525407232.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121798789115875328.jpg",
+      "gitBlobSha": "8c663470a9433799660a8a2dda87a27eb4e678d0",
+      "byteSize": 99740,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121798789115875328.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121846971799572480.jpg",
+      "gitBlobSha": "803e7e2510223e5f1fab804c97cd7fc1824a1ff7",
+      "byteSize": 22453,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121846971799572480.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121852493646966784.jpg",
+      "gitBlobSha": "1bb74c41bc49fb54ef0bc5311e2e61fd35b25740",
+      "byteSize": 41442,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121852493646966784.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2121979567690956800.jpg",
+      "gitBlobSha": "829e9fbcfb83c676fd6daca3c266ef034433b1cd",
+      "byteSize": 25213,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2121979567690956800.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122013117232398337.jpg",
+      "gitBlobSha": "540d582a014d56ba26d0bfc39c6d4261d6bd595f",
+      "byteSize": 51986,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122013117232398337.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122163632536719361.jpg",
+      "gitBlobSha": "2bbd0dd053dbf468b90ba5892e90038512899567",
+      "byteSize": 52610,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122163632536719361.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122217127587532800.jpg",
+      "gitBlobSha": "f5228cc667db6338bd6f432dfe67ef1b6aef3930",
+      "byteSize": 86154,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122217127587532800.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122226047748116480.jpg",
+      "gitBlobSha": "e2b715c781a197b3731aa8a5deb24525f35dde69",
+      "byteSize": 44054,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122226047748116480.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122347757650448384.jpg",
+      "gitBlobSha": "3d9ab395ec2c041c6cb653e305ec70c45c7c91c6",
+      "byteSize": 77581,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122347757650448384.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122353235285676032.jpg",
+      "gitBlobSha": "ee6c04f61a4eb9fdf6621eddc2cf7359549d196d",
+      "byteSize": 124143,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122353235285676032.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122457892108578816.jpg",
+      "gitBlobSha": "05c648736e1dd7b43a756c6760471fdeb2cc04f6",
+      "byteSize": 145119,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122457892108578816.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122486816322580480.jpg",
+      "gitBlobSha": "ff240d12607f2efc7a9f0e053c08a5fd99ad1133",
+      "byteSize": 32168,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122486816322580480.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122569488260640768.jpg",
+      "gitBlobSha": "1bb4ee07c3cb452c40882d5b4764d75efaa694de",
+      "byteSize": 73146,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122569488260640768.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122596335228731392.jpg",
+      "gitBlobSha": "2acecfa3e0120f5d88f57e0a52436b9027cc59a4",
+      "byteSize": 91385,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122596335228731392.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122652998207967233.jpg",
+      "gitBlobSha": "c03ec4f7159944f0ce8d3aa8b805f3967dc8fbb1",
+      "byteSize": 24746,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122652998207967233.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122655934287917056.jpg",
+      "gitBlobSha": "835b85c3224e20c9a2674bb861c30c5e7a8116c2",
+      "byteSize": 59526,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122655934287917056.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122721477351161856.jpg",
+      "gitBlobSha": "e69fe647d5fa8c25a30dcbc1456afff3c2fa95c9",
+      "byteSize": 95273,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122721477351161856.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122723705583448064.jpg",
+      "gitBlobSha": "d6822fd5733938b82ecee31f371bc0616da0271e",
+      "byteSize": 55625,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122723705583448064.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122781828063088640.jpg",
+      "gitBlobSha": "5b05d784fc5b2ec244b42987fa6345d81858903b",
+      "byteSize": 42333,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122781828063088640.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122789523260416000.jpg",
+      "gitBlobSha": "7dbaecbb43a177a01b0fdd995b7fb85d2b512b4e",
+      "byteSize": 76955,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122789523260416000.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122845252277166080.jpg",
+      "gitBlobSha": "6d08720d863a5dec13b528fa4ea04ec5a54e5b07",
+      "byteSize": 60612,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122845252277166080.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122891305986727936.jpg",
+      "gitBlobSha": "7fe3a6138300eb5e063a490c911e07cff4c66029",
+      "byteSize": 34072,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122891305986727936.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122922980938498049.jpg",
+      "gitBlobSha": "2078b8fff697c419e526e3e8408f2257d02200fa",
+      "byteSize": 53920,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122922980938498049.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122966738728112128.jpg",
+      "gitBlobSha": "540d582a014d56ba26d0bfc39c6d4261d6bd595f",
+      "byteSize": 51986,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122966738728112128.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122976436533538816.jpg",
+      "gitBlobSha": "b5e41ee4b3e523cd3dd8f1d05b85b62e4f1a0a01",
+      "byteSize": 61836,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122976436533538816.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2122985018029211648.jpg",
+      "gitBlobSha": "785fa4dea35bfc4208276a9249c84d34c9879a03",
+      "byteSize": 43929,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2122985018029211648.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2123007572362035200.jpg",
+      "gitBlobSha": "94ac27f93658ffe1625641eea0db9233ef60eeda",
+      "byteSize": 57868,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2123007572362035200.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2123017473377329152.jpg",
+      "gitBlobSha": "5fc57f2b4de4222c0751469f31272df902bd067b",
+      "byteSize": 50853,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2123017473377329152.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2123019396335775744.jpg",
+      "gitBlobSha": "37126d6936a752788d6c8cfba6fb4ff330d56dc0",
+      "byteSize": 45463,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2123019396335775744.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2123034069210656768.jpg",
+      "gitBlobSha": "5848de00dea67c591b9aa538e5dd5793dd93c4ef",
+      "byteSize": 11359,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2123034069210656768.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2123034314770382848.jpg",
+      "gitBlobSha": "c3bcf83e38089518bdbb41d621727c0a9449d796",
+      "byteSize": 82770,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2123034314770382848.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2123034314795528193.jpg",
+      "gitBlobSha": "e963e925e204c0032231162d275118fb29fd9c1c",
+      "byteSize": 70388,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2123034314795528193.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2123044496946655232.jpg",
+      "gitBlobSha": "c77c4d2fa21da7ce405e4077af990642d29ca9f4",
+      "byteSize": 35029,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2123044496946655232.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2123090027181965314.jpg",
+      "gitBlobSha": "1e7103fa4cdb497e3bb32daa5f78027af7f896f3",
+      "byteSize": 51054,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2123090027181965314.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2123401655219822592.jpg",
+      "gitBlobSha": "1152d19807a487b90e835fc6664f88d9fe39f065",
+      "byteSize": 31285,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2123401655219822592.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/2123610604783206400.jpg",
+      "gitBlobSha": "cfa725022a0644fac6d76a1c3172fe873620ad9d",
+      "byteSize": 44483,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/2123610604783206400.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    },
+    {
+      "path": "public/assets/video-thumbnails/86750cfd53532275312f.jpg",
+      "gitBlobSha": "a0dc58c5b6de1d91d8a0b3f6f140cdac85958088",
+      "byteSize": 90962,
+      "provenance": "inherited-unverified",
+      "evidence": "Present in the inherited repository; author, license, and acquisition history not independently verified.",
+      "existingProvenanceRecord": "public/assets/video-thumbnails/86750cfd53532275312f.jpg.json",
+      "recordVerification": "Referenced as repository evidence only; not a new verification of its claims."
+    }
+  ],
+  "optimizedVariants": [
+    {
+      "url": "/assets/optimized/little-things-480.webp",
+      "buildPath": "cloudflare/build/assets/assets/optimized/little-things-480.webp",
+      "source": "public/assets/little-things.png",
+      "provenance": "build-derived",
+      "targetWidth": 480,
+      "format": "webp",
+      "quality": 80,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/little-things-480.avif",
+      "buildPath": "cloudflare/build/assets/assets/optimized/little-things-480.avif",
+      "source": "public/assets/little-things.png",
+      "provenance": "build-derived",
+      "targetWidth": 480,
+      "format": "avif",
+      "quality": 55,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/little-things-960.webp",
+      "buildPath": "cloudflare/build/assets/assets/optimized/little-things-960.webp",
+      "source": "public/assets/little-things.png",
+      "provenance": "build-derived",
+      "targetWidth": 960,
+      "format": "webp",
+      "quality": 80,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/little-things-960.avif",
+      "buildPath": "cloudflare/build/assets/assets/optimized/little-things-960.avif",
+      "source": "public/assets/little-things.png",
+      "provenance": "build-derived",
+      "targetWidth": 960,
+      "format": "avif",
+      "quality": 55,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/little-things-1280.webp",
+      "buildPath": "cloudflare/build/assets/assets/optimized/little-things-1280.webp",
+      "source": "public/assets/little-things.png",
+      "provenance": "build-derived",
+      "targetWidth": 1280,
+      "format": "webp",
+      "quality": 80,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/little-things-1280.avif",
+      "buildPath": "cloudflare/build/assets/assets/optimized/little-things-1280.avif",
+      "source": "public/assets/little-things.png",
+      "provenance": "build-derived",
+      "targetWidth": 1280,
+      "format": "avif",
+      "quality": 55,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/together-480.webp",
+      "buildPath": "cloudflare/build/assets/assets/optimized/together-480.webp",
+      "source": "public/assets/together.png",
+      "provenance": "build-derived",
+      "targetWidth": 480,
+      "format": "webp",
+      "quality": 80,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/together-480.avif",
+      "buildPath": "cloudflare/build/assets/assets/optimized/together-480.avif",
+      "source": "public/assets/together.png",
+      "provenance": "build-derived",
+      "targetWidth": 480,
+      "format": "avif",
+      "quality": 55,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/together-960.webp",
+      "buildPath": "cloudflare/build/assets/assets/optimized/together-960.webp",
+      "source": "public/assets/together.png",
+      "provenance": "build-derived",
+      "targetWidth": 960,
+      "format": "webp",
+      "quality": 80,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/together-960.avif",
+      "buildPath": "cloudflare/build/assets/assets/optimized/together-960.avif",
+      "source": "public/assets/together.png",
+      "provenance": "build-derived",
+      "targetWidth": 960,
+      "format": "avif",
+      "quality": 55,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/together-1280.webp",
+      "buildPath": "cloudflare/build/assets/assets/optimized/together-1280.webp",
+      "source": "public/assets/together.png",
+      "provenance": "build-derived",
+      "targetWidth": 1280,
+      "format": "webp",
+      "quality": 80,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    },
+    {
+      "url": "/assets/optimized/together-1280.avif",
+      "buildPath": "cloudflare/build/assets/assets/optimized/together-1280.avif",
+      "source": "public/assets/together.png",
+      "provenance": "build-derived",
+      "targetWidth": 1280,
+      "format": "avif",
+      "quality": 55,
+      "effort": 4,
+      "withoutEnlargement": true,
+      "artworkGeneration": false
+    }
+  ]
+}
