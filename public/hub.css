@@ -7,3 +7,12 @@
 .hub-link-arrow{width:20px;height:20px;stroke-width:1.8;flex-shrink:0}.hub-person a,.hub-cupid-invite a{gap:8px}.hub-loop-heading button{display:inline-flex;align-items:center;gap:10px}.hub-topic h3 a{display:flex;justify-content:space-between;align-items:center;gap:12px}.hub-topic .hub-link-arrow{color:var(--pale-pink)}@media(max-width:700px){.hub-loop-heading button .hub-link-arrow{width:17px;height:17px}.hub-loop-heading button{gap:6px}}
 
 .hub-hero + .hub-news-section{margin-top:32px}
+
+/* Saved update cards keep the established pink-and-black layout and swipe on touch. */
+#hub-update-list{display:grid;grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:calc((100% - 18px)/2);gap:18px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:var(--pink) var(--surface);padding-bottom:8px}
+#hub-update-list:focus-visible,.hub-carousel-controls button:focus-visible{outline:2px solid var(--pink);outline-offset:4px}
+.hub-update{scroll-snap-align:start;align-self:stretch}.hub-update[role=group] h3{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+.hub-news-image[hidden]{display:none}.hub-update .hub-summary{white-space:pre-line}.hub-update .hub-source{font-size:14px}
+.hub-carousel-controls{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:12px}.hub-carousel-controls p{font-size:14px;color:var(--muted);margin:0;font-variant-numeric:tabular-nums}.hub-carousel-controls>div{display:flex;gap:8px}.hub-carousel-controls button{min-width:80px;min-height:44px;border:1px solid var(--line);border-radius:99px;padding:8px 16px;color:var(--white);background:var(--surface);font:600 14px DM,sans-serif;cursor:pointer}.hub-carousel-controls button:hover:enabled{color:var(--ground);background:var(--pink);border-color:var(--pink)}.hub-carousel-controls button:disabled{opacity:.4;cursor:default}
+.hub-check-info{margin-top:18px}.hub-check-info p{font-size:14px;color:var(--muted);margin:5px 0;line-height:1.6}.hub-check-info nav{display:flex;flex-wrap:wrap;column-gap:18px}.hub-check-info a{font-size:14px;color:var(--pale-pink);display:inline-flex;align-items:center;min-height:44px;text-underline-offset:4px}
+@media(max-width:700px){#hub-update-list{grid-auto-columns:90%;gap:18px;scroll-padding-right:10%}.hub-carousel-controls{gap:8px}.hub-carousel-controls button{min-width:72px;padding:8px 12px}.hub-loop-heading button{max-width:12ch}.hub-news-image{aspect-ratio:1.9}.hub-check-info nav{column-gap:14px}}

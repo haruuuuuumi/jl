@@ -6,3 +6,5 @@
 .wiki-review-dialog .check-label[hidden]{display:none!important}
 
 .suggested-category-panel{margin:22px 0;padding:18px;border:1px solid #f576b566;border-radius:12px;background:#f576b50a}.suggested-category-panel h3{font-size:17px;margin:0 0 12px}.admin-dialog .category-suggestion-choice{display:flex;align-items:flex-start;gap:10px;line-height:1.5;font-size:14px}.admin-dialog .category-suggestion-choice input{width:18px;min-height:18px;height:18px;padding:0;margin:2px 0 0;flex-shrink:0}.category-tags .category-suggestion-tag{color:#f576b5;border-style:dashed;overflow-wrap:anywhere}
+
+.admin-update-check{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:22px 0 28px;margin-bottom:24px;border-bottom:1px solid var(--line)}.admin-update-check h2{font:600 22px DM,sans-serif;margin:0 0 8px}.admin-update-check p{font-size:14px;color:var(--muted);max-width:75ch;margin:0;line-height:1.6}.admin-update-check .button{flex-shrink:0}@media(max-width:600px){.admin-update-check{align-items:start;flex-direction:column;gap:16px}}

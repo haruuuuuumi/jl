@@ -4,6 +4,7 @@ import {readFile,access} from 'node:fs/promises';
 import {createApp} from './index.mjs';
 import {baseline} from './build/catalog.mjs';
 import {localD1} from '../scripts/local-d1.mjs';
+import {FANDOM_ACCOUNTS,profilePostIds,cardFromPost,collectFandomUpdates,syncFandomUpdates,nextFandomCheck} from '../worker/fandom-updates.mjs';
 const app=createApp(),origin='https://jeoleecupids.com',baseEnv={SITE_ORIGIN:origin,ADMIN_PASSWORD:'test-only-admin-password-123',ADMIN_AUTH_SECRET:'test-only-independent-cloudflare-pepper'};
 function req(path='/',unused,options={}){return new Request(origin+path,options);}
 const context={waitUntil(){}};
@@ -155,21 +156,74 @@ test('About Jeolee has its own public page and the homepage links to it',async()
  const about=await readFile(new URL('../public/about.html',import.meta.url),'utf8'),home=await readFile(new URL('../public/index.html',import.meta.url),'utf8');assert.ok(about.includes('id="jeo-profile"'));assert.ok(about.includes('id="gehlee-profile"'));assert.ok(about.includes('id="fandoms"'));assert.ok(home.includes('href="/about"'));assert.ok(!home.includes('id="jeo-profile"'));assert.ok(!about.includes('src="app.js'));
 });
 
-test('free fandom feeds refresh at noon and midnight Philippine time without an API token',async()=>{
- const source=await readFile(new URL('../public/fandom-feeds.js',import.meta.url),'utf8');const clock=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
- assert.deepEqual(clock.FANDOM_ACCOUNTS.map(a=>a.handle),['jeoleenation','official_jeolee','withjeolee']);
- const beforeNoon=Date.parse('2026-11-22T03:59:59Z'),noon=Date.parse('2026-11-22T04:00:00Z'),midnight=Date.parse('2026-11-22T16:00:00Z');
- assert.equal(clock.nextFeedRefreshAt(beforeNoon),noon);assert.equal(clock.nextFeedRefreshAt(noon),midnight);assert.equal(clock.feedRefreshWindow(beforeNoon)+1,clock.feedRefreshWindow(noon));assert.equal(clock.feedRefreshWindow(noon)+1,clock.feedRefreshWindow(midnight));
- const home=await readFile(new URL('../public/index.html',import.meta.url),'utf8');assert.ok(home.includes('id="fandom-feed-tabs"'));assert.ok(home.includes('id="fandom-feed-source"'));
-});
-
-test('a hidden zero-size X placeholder is not a successfully loaded timeline',async()=>{
- const source=await readFile(new URL('../public/fandom-feeds.js',import.meta.url),'utf8'),feed=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
- const frame=(width,height,style={})=>({getBoundingClientRect:()=>({width,height}),style,getAttribute:()=>null});
- assert.equal(feed.timelineFrameReady(frame(0,0,{visibility:'hidden'})),false);assert.equal(feed.timelineFrameReady(frame(600,560,{visibility:'hidden'})),false);assert.equal(feed.timelineFrameReady(frame(600,560,{display:'none'})),false);assert.equal(feed.timelineFrameReady(frame(600,560)),true);
-});
 test('public page footers contain only the requested management credit and use the JL icon',async()=>{
  for(const page of ['index.html','about.html','cupids.html']){const html=await readFile(new URL('../public/'+page,import.meta.url),'utf8'),footer=html.match(/<footer[\s\S]*?<\/footer>/)?.[0];assert.ok(footer.includes('Managed by Jeolee – Amats GDM'));assert.ok(!footer.includes('Netflix'));assert.ok(!footer.includes('/admin'));assert.ok(html.includes('favicon.svg?v=jl-2'));}
  const home=await readFile(new URL('../public/index.html',import.meta.url),'utf8');assert.ok(!home.includes('for the plot. for the butterflies.'));assert.ok(!home.includes('Clips stay with their original creators on X.'));
  const icon=await readFile(new URL('../public/assets/favicon.svg',import.meta.url),'utf8');assert.ok(icon.includes('aria-label="JL"'));
+});
+
+
+const fixturePosts=[
+ {id:'1000000000000000001',handle:'jeoleenation',created_at:'2026-11-01T00:00:00Z',text:'An older pinned story'},
+ {id:'1000000000000000002',handle:'jeoleenation',created_at:'2026-11-22T03:00:00Z',text:'Today from Nation &amp; Cupids'},
+ {id:'1000000000000000003',handle:'official_jeolee',created_at:'2026-11-22T02:00:00Z',text:'Official fanbase update'},
+ {id:'1000000000000000004',handle:'withjeolee',created_at:'2026-11-22T01:00:00Z',text:'With Jeolee update'},
+ {id:'1000000000000000005',handle:'withjeolee',created_at:'2026-11-20T00:00:00Z',text:'Earlier update'}
+];
+function fixtureSource(calls=[]){return async input=>{
+ const url=new URL(input);calls.push(url.href);
+ if(url.hostname==='x.com'){const handle=url.pathname.slice(1);return new Response(fixturePosts.filter(p=>p.handle===handle).map(p=>'<a href="/'+p.handle+'/status/'+p.id+'">Post</a>').join(''));}
+ assert.equal(url.hostname,'cdn.syndication.twimg.com');const post=fixturePosts.find(p=>p.id===url.searchParams.get('id'));assert.ok(post);
+ return Response.json({__typename:'Tweet',id_str:post.id,user:{screen_name:post.handle},text:post.text,created_at:post.created_at,mediaDetails:[{media_url_https:'https://pbs.twimg.com/media/test.jpg'}]});
+};}
+test('shared reader verifies approved authors and dates, sorts past pinned posts and saves only the latest three',async()=>{
+ const calls=[],result=await collectFandomUpdates({fetchImpl:fixtureSource(calls),bootstrapPosts:[]});
+ assert.deepEqual(FANDOM_ACCOUNTS.map(a=>a.handle),['jeoleenation','official_jeolee','withjeolee']);assert.equal(result.errors.length,0);assert.equal(result.profilesRead,3);
+ assert.deepEqual(result.posts.map(p=>p.postId),fixturePosts.slice(1,4).map(p=>p.id));assert.equal(result.posts[0].title,'Today from Nation & Cupids');assert.equal(result.posts[0].source,'Jeolee Nation · @jeoleenation');assert.equal(result.posts[0].imageFromPost,true);
+ const again=await collectFandomUpdates({fetchImpl:fixtureSource(),knownPosts:result.posts,bootstrapPosts:[]});assert.equal(again.posts.length,0);
+ assert.deepEqual(profilePostIds('<a href="/unapproved/status/1000000000000000002"></a><a href="https://x.com/jeoleenation/status/1000000000000000002?s=20"></a>','jeoleenation'),['1000000000000000002']);
+ const data={__typename:'Tweet',id_str:fixturePosts[1].id,user:{screen_name:'other'},text:'Wrong author',created_at:fixturePosts[1].created_at};assert.equal(cardFromPost(data,data.id_str,FANDOM_ACCOUNTS[0]),null);data.user.screen_name='jeoleenation';data.created_at='invalid';assert.equal(cardFromPost(data,data.id_str,FANDOM_ACCOUNTS[0]),null);
+});
+test('source failures preserve saved cards, record the failure, and respect backoff',async()=>{
+ const DB=await localD1();try{
+  const env={...baseEnv,DB},now=Date.parse('2026-11-22T03:59:00Z');
+  assert.equal((await syncFandomUpdates(env,{fetchImpl:fixtureSource(),now,bootstrapPosts:[]})).imported,3);
+  let requests=0;const blocked=async()=>{requests++;return new Response('Unavailable',{status:403});};
+  const failed=await syncFandomUpdates(env,{fetchImpl:blocked,now:now+120000,bootstrapPosts:[]});assert.equal(failed.outcome,'unavailable');assert.equal(failed.imported,0);assert.equal(requests,3);
+  const saved=await (await app.fetch(req('/api/updates'),env,context)).json();assert.equal(saved.items.length,3);assert.equal(saved.lastSuccessAt,now);assert.equal(saved.lastCheckFailed,true);
+  const paused=await syncFandomUpdates(env,{fetchImpl:blocked,now:now+180000,bootstrapPosts:[]});assert.equal(paused.outcome,'skipped');assert.equal(requests,3);
+  assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fandom_updates').get().n,3);
+ }finally{DB.close();}
+});
+test('a rate-limited metadata source is not repeatedly requested during the same check',async()=>{
+ let metadataCalls=0;const normal=fixtureSource(),now=Date.parse('2026-11-22T03:59:00Z');
+ const result=await collectFandomUpdates({now,bootstrapPosts:[],fetchImpl:async input=>{if(new URL(input).hostname==='cdn.syndication.twimg.com'){metadataCalls++;return new Response('',{status:429,headers:{'retry-after':'7200'}});}return normal(input);}});
+ assert.equal(result.posts.length,0);assert.equal(metadataCalls,1);assert.ok(result.retryAfter>=now+7200000);
+});
+test('only the password-protected same-origin admin can manually run the reader',async()=>{
+ const DB=await localD1();try{const calls=[],readerApp=createApp({fetchFandomSource:fixtureSource(calls),bootstrapPosts:[]}),env={...baseEnv,DB};
+ assert.equal((await readerApp.fetch(req('/api/admin/updates/sync',null,post({})),env,context)).status,401);
+ const cookie=await login(env);assert.equal((await readerApp.fetch(req('/api/admin/updates/sync',null,{...post({}),headers:{origin:'https://other.invalid','content-type':'application/json',cookie}}),env,context)).status,403);assert.equal(calls.length,0);
+ const result=await (await readerApp.fetch(req('/api/admin/updates/sync',null,{...post({}),headers:{origin,'content-type':'application/json',cookie}}),env,context)).json();assert.equal(result.imported,3);const count=calls.length;
+ const again=await (await readerApp.fetch(req('/api/admin/updates/sync',null,{...post({}),headers:{origin,'content-type':'application/json',cookie}}),env,context)).json();assert.equal(again.outcome,'recent');assert.equal(calls.length,count);
+ const feed=await (await readerApp.fetch(req('/api/updates'),env,context)).json();assert.equal(feed.items.length,3);assert.equal(feed.errors,undefined);
+ }finally{DB.close();}
+});
+test('public reads can start only one initial check and cron runs with the site closed',async()=>{
+ const DB=await localD1();try{const calls=[],readerApp=createApp({fetchFandomSource:fixtureSource(calls),bootstrapPosts:[]}),env={...baseEnv,DB},work=[],ctx={waitUntil(p){work.push(p);}};
+ await Promise.all([readerApp.fetch(req('/api/updates'),env,ctx),readerApp.fetch(req('/api/updates'),env,ctx)]);await Promise.all(work);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,3);
+ await readerApp.fetch(req('/api/updates'),env,ctx);await Promise.all(work);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,3);
+ await readerApp.scheduled({},env,ctx);assert.equal(calls.filter(url=>new URL(url).hostname==='x.com').length,6);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fandom_updates').get().n,3);
+ }finally{DB.close();}
+});
+test('server cron uses noon and midnight Philippine time and public updates use a saved-card carousel',async()=>{
+ const beforeNoon=Date.parse('2026-11-22T03:59:59Z'),noon=Date.parse('2026-11-22T04:00:00Z'),midnight=Date.parse('2026-11-22T16:00:00Z');assert.equal(nextFandomCheck(beforeNoon),noon);assert.equal(nextFandomCheck(noon),midnight);assert.equal(nextFandomCheck(midnight),noon+86400000);
+ const config=JSON.parse(await readFile(new URL('./wrangler.template.json',import.meta.url),'utf8'));assert.deepEqual(config.triggers.crons,['0 4,16 * * *']);
+ const home=await readFile(new URL('../public/index.html',import.meta.url),'utf8');assert.ok(home.includes('aria-roledescription="carousel"'));assert.ok(home.includes('id="hub-next"'));assert.ok(!home.includes('fandom-feeds.js'));assert.ok(!home.includes('id="fandom-feeds"'));
+});
+
+test('an owner-supplied individual post is verified even if the profile pages cannot be read',async()=>{
+ const normal=fixtureSource(),post=fixturePosts[1];
+ const result=await collectFandomUpdates({bootstrapPosts:[{handle:post.handle,id:post.id}],fetchImpl:async input=>new URL(input).hostname==='x.com'?new Response('Unavailable',{status:403}):normal(input)});
+ assert.equal(result.profilesRead,0);assert.equal(result.errors.length,3);assert.equal(result.posts.length,1);assert.equal(result.posts[0].postId,post.id);assert.equal(result.posts[0].createdAt,post.created_at.replace('00Z','00.000Z'));
 });

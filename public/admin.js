@@ -90,3 +90,17 @@ $('#import-browser-clips').addEventListener('click',async event=>{const button=e
 showAuth();
 
 window.addEventListener('admin:expired',showAuth);
+
+async function updateCheckStatus(){
+ try{const status=await api('/api/admin/updates',undefined,'GET'),format=value=>new Intl.DateTimeFormat('en',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Manila'}).format(value)+' PHT';
+  const message=status.errors.length?'X was unavailable: '+[...new Set(status.errors.map(error=>error.message))].join(' '):status.lastSuccessAt?'Last successful check: '+format(status.lastSuccessAt)+'.':'No successful check yet.';
+  $('#admin-update-status').textContent=message+' Next check: '+format(status.nextCheck)+'. Saved posts are kept if X is unavailable.';
+ }catch(error){$('#admin-update-status').textContent=error.message;}
+}
+window.addEventListener('admin:ready',updateCheckStatus);
+$('#check-fandom-updates').addEventListener('click',async event=>{
+ const button=event.currentTarget;button.disabled=true;button.textContent='Checking…';$('#admin-update-status').textContent='Reading the three public fanbase pages…';
+ try{const result=await api('/api/admin/updates/sync',{});await updateCheckStatus();toast(result.imported?result.imported+' new updates published.':result.outcome==='no_new'?'No new posts found.':result.outcome==='recent'||result.outcome==='skipped'?'A check was already run or X requested a pause. See the next check time.':'X couldn’t be read. Your saved stories are still available.');}
+ catch(error){$('#admin-update-status').textContent=error.message;}
+ finally{button.disabled=false;button.textContent='Check now';}
+});

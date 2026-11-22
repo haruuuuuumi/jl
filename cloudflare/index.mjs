@@ -1,9 +1,10 @@
 import {handleRequest} from '../worker/handler.mjs';
 import {baseline} from './build/catalog.mjs';
+import {fandomUpdatesApi,syncFandomUpdates} from '../worker/fandom-updates.mjs';
 import {validAdminSession} from '../worker/catalog.mjs';
 const deny=(text,status)=>new Response(text,{status,headers:{'cache-control':'no-store','content-type':'text/plain; charset=utf-8','x-content-type-options':'nosniff'}});
 export function createApp(options={}){
- return {async fetch(request,env,ctx){
+ return {async scheduled(controller,env,ctx){const result=await syncFandomUpdates(env,{fetchImpl:options.fetchFandomSource,bootstrapPosts:options.bootstrapPosts});console.log('Fandom updates',JSON.stringify(result));},async fetch(request,env,ctx){
   const url=new URL(request.url);
   if(url.origin!==env.SITE_ORIGIN)return deny('This hostname is not configured for this site.',403);
   // Canonicalize before deciding which routes need owner authentication.
@@ -21,6 +22,7 @@ export function createApp(options={}){
   if(url.pathname.startsWith('/api/admin')&&!authEndpoint&&!authenticated)return new Response(JSON.stringify({error:'Sign in to use admin.'}),{status:401,headers:{'content-type':'application/json','cache-control':'no-store'}});
   const adminPage=['/admin','/admin/','/admin.html'].includes(url.pathname);
   if(admin&&!adminPage&&!authEndpoint&&!authenticated&&url.pathname!=='/signin-with-chatgpt')return deny('Sign in to use admin.',401);
+  const updates=await fandomUpdatesApi(routed,runtime,ctx,{fetchImpl:options.fetchFandomSource,bootstrapPosts:options.bootstrapPosts});if(updates)return updates;
   if(url.pathname.startsWith('/api/'))return handleRequest(routed,runtime,ctx,{},baseline);
   if(url.pathname==='/signin-with-chatgpt')return Response.redirect(new URL('/admin',url),303);
   if(url.pathname==='/admin/'||url.pathname==='/cupids/'||url.pathname==='/about/')return new Response(null,{status:308,headers:{location:url.pathname.slice(0,-1),'cache-control':'no-store'}});
