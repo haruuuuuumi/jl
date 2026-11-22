@@ -26,18 +26,23 @@ async function showAuth(){
 }
 function updateCategoryOptions(){const selected=$('#admin-category').value;$('#admin-category').innerHTML='<option value="all">All categories</option>'+state.categories.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');$('#admin-category').value=state.categories.some(c=>c.id===selected)?selected:'all';}
 async function loadWorkspace(){
- try{state=await api('/api/admin/catalog',undefined,'GET');window.adminClipPendingCount=state.items.filter(item=>item.status==='pending').length;if(firstWorkspace){view=window.adminClipPendingCount?'pending':'published';firstWorkspace=false;}$('#auth-panel').hidden=true;$('#admin-workspace').hidden=false;$('#logout').hidden=false;$('#change-password').hidden=!!window.adminPasswordManagedExternally;$('#workspace-error').textContent='';updateCategoryOptions();renderRows();const legacy=legacyClips();$('#import-browser-clips').hidden=!legacy.length;window.dispatchEvent(new Event('admin:ready'));}
+ try{state=await api('/api/admin/catalog',undefined,'GET');window.adminClipPendingCount=state.items.filter(item=>item.status==='pending').length;if(firstWorkspace){view=window.adminClipPendingCount?'pending':'published';$('#admin-basis').value=view==='pending'?'submitted':'posted';firstWorkspace=false;}$('#auth-panel').hidden=true;$('#admin-workspace').hidden=false;$('#logout').hidden=false;$('#change-password').hidden=!!window.adminPasswordManagedExternally;$('#workspace-error').textContent='';updateCategoryOptions();renderRows();const legacy=legacyClips();$('#import-browser-clips').hidden=!legacy.length;window.dispatchEvent(new Event('admin:ready'));}
  catch(error){$('#workspace-error').textContent=error.message;throw error;}
 }
 function renderRows(){
  for(const status of ['published','pending','rejected','deleted'])$('#count-'+status).textContent=state.items.filter(i=>i.status===status).length;
  $$('[data-status]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.status===view)));
- const filtered=state.items.filter(i=>i.status===view&&(category==='all'||i.categoryIds.includes(category))&&(!search||(i.title+' '+(i.creator?.handle||'')+' '+(i.creator?.name||'')).toLowerCase().includes(search)));
- if(view==='pending')filtered.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+ const matches=state.items.filter(i=>i.status===view&&(category==='all'||i.categoryIds.includes(category))&&(!search||(i.title+' '+(i.creator?.handle||'')+' '+(i.creator?.name||'')).toLowerCase().includes(search)));
+ const order=$('#admin-order').value;
+ if(view==='pending'&&!order)matches.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+ const timestamp=$('#admin-basis').value==='submitted'
+  ? item=>item.id.startsWith('submitted-')?item.createdAt:null
+  : item=>item.postedAt;
+ const filtered=window.SiteUI.filterDates(matches,timestamp,{from:$('#admin-from').value,to:$('#admin-to').value,order});
  $('#admin-results').textContent=filtered.length+' '+(filtered.length===1?'moment':'moments')+(view==='pending'?' waiting for review':'');
  $('#admin-rows').innerHTML=filtered.map(item=>{
   const actions=view==='published'?`<button data-edit="${esc(item.id)}">Edit</button><button data-change="deleted" data-id="${esc(item.id)}" class="danger">Delete</button>`:view==='deleted'?`<button data-change="published" data-id="${esc(item.id)}">Restore to library</button>`:`<button data-edit="${esc(item.id)}">Review</button>${view==='pending'?`<button data-change="rejected" data-id="${esc(item.id)}" class="danger">Reject</button>`:`<button data-change="deleted" data-id="${esc(item.id)}" class="danger">Delete</button>`}`;
-  return `<tr><td><div class="admin-moment"><button class="admin-thumb" data-preview="${esc(item.id)}" aria-label="Preview ${esc(item.title)}"><img src="${esc(item.image)}" alt="" loading="lazy"></button><div><button class="admin-name" data-edit="${esc(item.id)}">${esc(item.title)}</button><p class="admin-meta">${item.creator?'@'+esc(item.creator.handle):item.kind==='photo'?'Photo':'X post'}${item.duration?' · '+esc(item.duration):''}</p></div></div></td><td><div class="category-tags">${item.collections.map(name=>`<span>${esc(name)}</span>`).join('')+(item.suggestedCategory?`<span class="category-suggestion-tag">Suggested: ${esc(item.suggestedCategory)}</span>`:'')}</div></td><td><div class="row-actions">${actions}</div></td></tr>`;
+  return `<tr><td><div class="admin-moment"><button class="admin-thumb" data-preview="${esc(item.id)}" aria-label="Preview ${esc(item.title)}"><img src="${esc(item.image)}" alt="" loading="lazy"></button><div><button class="admin-name" data-edit="${esc(item.id)}">${esc(item.title)}</button><p class="admin-meta">${item.creator?'@'+esc(item.creator.handle):item.kind==='photo'?'Photo':'X post'}${item.duration?' · '+esc(item.duration):''}</p>${item.postedAt?'<p class="admin-meta">Posted '+window.SiteUI.date(item.postedAt)+'</p>':''}${item.id.startsWith('submitted-')&&item.createdAt?'<p class="admin-meta">Submitted '+window.SiteUI.date(item.createdAt)+'</p>':''}</div></div></td><td><div class="category-tags">${item.collections.map(name=>`<span>${esc(name)}</span>`).join('')+(item.suggestedCategory?`<span class="category-suggestion-tag">Suggested: ${esc(item.suggestedCategory)}</span>`:'')}</div></td><td><div class="row-actions">${actions}</div></td></tr>`;
  }).join('');
  $('#admin-empty').hidden=filtered.length>0;$('.admin-table-wrap').hidden=filtered.length===0;$('#admin-empty-copy').textContent=search?'Try another title or creator.':view==='pending'?'New submissions will appear here before they can enter the library.':view==='deleted'?'Deleted clips can be restored from here.':'No clips match this view.';
 }
@@ -68,7 +73,7 @@ async function previewItem(id){
 }
 function legacyClips(){try{const clips=JSON.parse(localStorage.getItem('jeolee-clips-v1'));return Array.isArray(clips)?clips.filter(c=>c&&typeof c.url==='string'&&typeof c.title==='string'):[];}catch{return [];}}
 document.addEventListener('click',event=>{
- const status=event.target.closest('[data-status]');if(status){view=status.dataset.status;renderRows();return;}
+ const status=event.target.closest('[data-status]');if(status){view=status.dataset.status;$('#admin-basis').value=view==='pending'||view==='rejected'?'submitted':'posted';renderRows();return;}
  const edit=event.target.closest('[data-edit]');if(edit){openEditor(edit.dataset.edit);return;}
  const preview=event.target.closest('[data-preview]');if(preview){previewItem(preview.dataset.preview);return;}
  const change=event.target.closest('[data-change]');if(change){changeStatus(change.dataset.id,change.dataset.change,change);return;}
@@ -80,6 +85,7 @@ $('#show-password').addEventListener('change',e=>{for(const id of ['admin-passwo
 $('#generate-password').addEventListener('click',()=>{const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#_-+';const password=Array.from(crypto.getRandomValues(new Uint8Array(28)),b=>alphabet[b%alphabet.length]).join('');$('#admin-password').value=password;$('#confirm-password').value=password;$('#show-password').checked=true;$('#admin-password').type=$('#confirm-password').type='text';});
 $('#auth-retry').addEventListener('click',showAuth);
 $('#logout').addEventListener('click',async()=>{try{await api('/api/admin/logout',{});await showAuth();}catch(error){toast(error.message);}});
+$('#admin-dates').addEventListener('change',renderRows);
 $('#admin-search').addEventListener('input',e=>{search=e.target.value.trim().toLowerCase();renderRows();});$('#admin-category').addEventListener('change',e=>{category=e.target.value;renderRows();});$('#refresh-admin').addEventListener('click',()=>loadWorkspace().catch(error=>toast(error.message)));
 $('#clip-review-ack').addEventListener('change',()=>{$('#approve-edit').disabled=!$('#clip-review-ack').checked;});
 $('#edit-form').addEventListener('submit',e=>{e.preventDefault();saveEditor();});$('#approve-edit').addEventListener('click',()=>saveEditor('published'));$('#reject-edit').addEventListener('click',()=>saveEditor('rejected'));$('#preview-edit').addEventListener('click',()=>{if(editing)previewItem(editing.id);});

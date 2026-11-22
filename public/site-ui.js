@@ -5,6 +5,27 @@ window.SiteUI={
  save(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}},
  remove(key){try{localStorage.removeItem(key);}catch{}},
  date(value,withTime=false){return new Intl.DateTimeFormat('en',{dateStyle:'medium',...(withTime?{timeStyle:'short'}:{}),timeZone:'Asia/Manila'}).format(new Date(typeof value==='string'&&value.length===10?value+'T12:00:00Z':value));},
+ day(value){
+  return new Date(value+8*60*60*1000).toISOString().slice(0,10);
+ },
+ filterDates(items, timestamp, {from,to,order}){
+  const visible=items.filter(item=>{
+   if(!from&&!to)return true;
+   const stamp=timestamp(item);
+   if(!Number.isFinite(stamp))return false;
+   const day=this.day(stamp);
+   return (!from||day>=from)&&(!to||day<=to);
+  });
+  if(order==='newest'||order==='oldest'){
+   visible.sort((a,b)=>{
+    const left=timestamp(a),right=timestamp(b);
+    if(!Number.isFinite(left))return Number.isFinite(right)?1:0;
+    if(!Number.isFinite(right))return -1;
+    return order==='newest'?right-left:left-right;
+   });
+  }
+  return visible;
+ },
  picture(src,alt='',className='',priority=false){
   const e=this.escape,match=String(src||'').match(/(?:^|\/)assets\/(little-things|together)\.png$/),attrs=' class="'+e(className)+'" alt="'+e(alt)+'" loading="'+(priority?'eager':'lazy')+'"'+(priority?' fetchpriority="high"':'')+' decoding="async"';
   if(!match)return '<img src="'+e(src)+'"'+attrs+'>';

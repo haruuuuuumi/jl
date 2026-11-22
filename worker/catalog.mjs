@@ -45,7 +45,13 @@ async function loadCatalogState(db,baseline){
  for(const item of entries.values()){const names=item.categoryIds.map(id=>categoryMap.get(id)?.name).filter(Boolean);item.category=names[0]||'Uncategorized';item.collections=names;delete item.custom;}
  return {categories,entries};
 }
-function publicCatalogItem(item){const {status,revision,createdAt,updatedAt,sourceKey,categoryIds,titleSource,suggestedCategory,...publicItem}=item;return publicItem;}
+function publicCatalogItem(item){const {status,revision,createdAt,updatedAt,sourceKey,categoryIds,titleSource,suggestedCategory,...publicItem}=item;const post=parseCatalogPost(item.url);
+ if(post){
+  const timestamp=Number((BigInt(post.id)>>22n)+1288834974657n);
+  if(timestamp>1288834974657&&timestamp<=Date.now())publicItem.postedAt=timestamp;
+ }
+ return publicItem;
+}
 async function rateLimit(request,env,label,maximum,windowMs){
  const secret=requireAuthSecret(env),identity=(env.ADMIN_AUTH_MODE==='password'?request.headers.get('cf-connecting-ip'):request.headers.get('oai-authenticated-user-id')||request.headers.get('cf-connecting-ip'))||'anonymous';
  const key=hex(await catalogHmac(secret,'rate:v1:'+label+':'+identity)),now=Date.now(),cutoff=now-windowMs;
