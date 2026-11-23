@@ -73,8 +73,14 @@
 .story-dialog-actions { display: flex; justify-content: flex-end; margin: -8px -8px 8px 0; }
 .story-dialog-actions button { width: 44px; height: 44px; border: 1px solid #e1b4cd; border-radius: 50%; background: #fbe6f1; color: #562c46; font-size: 24px; }
 .story-dialog-actions button:focus-visible { outline-color: #794669; }
-@media (max-width: 760px) { .story-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 420px) { .story-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) {
+  .story-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .story-letter { min-height: 104px; padding: 11px 12px; gap: 5px; border-radius: 11px; }
+  .story-letter-title { font-size: 15px; }
+  .story-letter-byline { font-size: 12px; line-height: 1.35; }
+  .story-letter-seal { width: 23px; height: 23px; font-size: 12px; }
+  .story-letter-slip { height: 35px; }
+}
 @media (prefers-reduced-motion: no-preference) {
   .story-letter.is-opening::before { animation: story-flap 290ms ease-out forwards; }
   .story-letter.is-opening .story-letter-slip { animation: story-slip 340ms ease-out forwards; }
