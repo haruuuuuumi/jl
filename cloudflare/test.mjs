@@ -298,7 +298,7 @@ test('Because of JeoLee stories stay private until approved and can be hidden ag
   assert.equal(submit.status,201);
   const {id}=await submit.json();
   const list=async()=>await (await app.fetch(req(path),env,context)).json();
-  assert.deepEqual((await list()).items,[]);
+  assert.deepEqual(await list(),{items:[],nextOffset:null,total:0});
   assert.equal((await app.fetch(req(adminPath),env,context)).status,401);
   const cookie=await login(env);
   const pending=await (await app.fetch(req(adminPath,null,{headers:{cookie}}),env,context)).json();
@@ -306,9 +306,11 @@ test('Because of JeoLee stories stay private until approved and can be hidden ag
   assert.equal(pending.items[0].username,null);
   const update=(status,revision)=>app.fetch(req(adminPath+'/'+id,null,{...post({status,revision},{cookie}),method:'PATCH'}),env,context);
   assert.equal((await update('published',1)).status,200);
-  assert.deepEqual((await list()).items,[{id,title:payload.title,story:payload.story,username:null}]);
+  assert.deepEqual(await list(),{items:[{id,title:payload.title,story:payload.story,username:null}],nextOffset:null,total:1});
+  const pastFirstPage=await app.fetch(req(path+'?offset=12'),env,context);
+  assert.deepEqual(await pastFirstPage.json(),{items:[],nextOffset:null,total:1});
   assert.equal((await update('hidden',1)).status,409);
   assert.equal((await update('hidden',2)).status,200);
-  assert.deepEqual((await list()).items,[]);
+  assert.deepEqual(await list(),{items:[],nextOffset:null,total:0});
  }finally{DB.close();}
 });

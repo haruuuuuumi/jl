@@ -9,9 +9,9 @@
   <link rel="stylesheet" href="/style.css?v=pink-2">
   <link rel="stylesheet" href="/modern.css?v=pink-2">
   <link rel="stylesheet" href="/site.css?v=mobile-nav-1">
-  <link rel="stylesheet" href="/stories.css">
+  <link rel="stylesheet" href="/stories.css?v=envelopes-2">
   <script src="/site-ui.js?v=structure-1" defer></script>
-  <script src="/stories.js" defer></script>
+  <script src="/stories.js?v=envelopes-2" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#stories-main">Skip to stories</a>
@@ -23,7 +23,10 @@
     <a href="#write-story" class="button button-red">Write your story</a>
   </section>
   <section aria-labelledby="letters-title">
-    <h2 id="letters-title">Letters from Cupids</h2>
+    <div class="story-mailbox-heading">
+      <h2 id="letters-title">Letters from Cupids</h2>
+      <p id="story-count" class="story-count" role="status" hidden></p>
+    </div>
     <p id="story-list-status" role="status">Opening the mailbox…</p>
     <div id="story-grid" class="story-grid"></div>
     <button id="story-more" type="button" class="button button-outline" hidden>Load more letters</button>
@@ -44,6 +47,16 @@
     </form>
   </section>
 </main>
+<dialog id="story-dialog" class="story-dialog" aria-labelledby="story-dialog-title">
+  <div class="story-paper">
+    <form method="dialog" class="story-dialog-actions">
+      <button type="submit" aria-label="Close letter" autofocus>×</button>
+    </form>
+    <h2 id="story-dialog-title"></h2>
+    <p id="story-dialog-byline" class="story-dialog-byline"></p>
+    <p id="story-dialog-body" class="story-letter-body"></p>
+  </div>
+</dialog>
 <footer class="site-footer"><span>Managed by Jeolee – Amats GDM</span></footer>
 </body>
 </html>

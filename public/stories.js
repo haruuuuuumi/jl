@@ -3,12 +3,38 @@ const formStatus=document.querySelector('#story-form-status');
 const storyGrid=document.querySelector('#story-grid');
 const loadMore=document.querySelector('#story-more');
 const listStatus=document.querySelector('#story-list-status');
+const storyCount=document.querySelector('#story-count');
+const storyDialog=document.querySelector('#story-dialog');
 let offset=0;
+let opener=null;
+
+async function openStory(item,envelope){
+ if(opener)return;
+ opener=envelope;
+ envelope.classList.add('is-opening');
+ await Promise.allSettled((envelope.getAnimations?.({subtree:true})||[]).map(animation=>animation.finished));
+ envelope.classList.remove('is-opening');
+ document.querySelector('#story-dialog-title').textContent=item.title;
+ document.querySelector('#story-dialog-byline').textContent=item.username||'Anonymous';
+ document.querySelector('#story-dialog-body').textContent=item.story;
+ storyDialog.showModal();
+ document.body.classList.add('dialog-open');
+}
+
+storyDialog.addEventListener('close',()=>{
+ document.body.classList.remove('dialog-open');
+ opener?.focus({preventScroll:true});
+ opener=null;
+});
 
 function appendStory(item){
- const letter=document.createElement('details');
+ const letter=document.createElement('button');
+ letter.type='button';
  letter.className='story-letter';
- const summary=document.createElement('summary');
+ letter.setAttribute('aria-haspopup','dialog');
+ const slip=document.createElement('span');
+ slip.className='story-letter-slip';
+ slip.setAttribute('aria-hidden','true');
  const seal=document.createElement('span');
  seal.className='story-letter-seal';
  seal.setAttribute('aria-hidden','true');
@@ -19,11 +45,8 @@ function appendStory(item){
  const byline=document.createElement('span');
  byline.className='story-letter-byline';
  byline.textContent=item.username||'Anonymous';
- const body=document.createElement('p');
- body.className='story-letter-body';
- body.textContent=item.story;
- summary.append(seal,title,byline);
- letter.append(summary,body);
+ letter.append(slip,seal,title,byline);
+ letter.addEventListener('click',()=>openStory(item,letter));
  storyGrid.append(letter);
 }
 
@@ -32,7 +55,11 @@ async function loadStories(){
  try{
   const response=await fetch('/api/stories?offset='+offset);
   if(!response.ok)throw new Error();
-  const {items,nextOffset}=await response.json();
+  const {items,nextOffset,total}=await response.json();
+  if(Number.isSafeInteger(total)){
+   storyCount.textContent=total.toLocaleString()+ (total===1?' envelope':' envelopes');
+   storyCount.hidden=false;
+  }
   items.forEach(appendStory);
   listStatus.textContent=storyGrid.childElementCount?'':'The mailbox is empty. Write the first letter.';
   offset=nextOffset;

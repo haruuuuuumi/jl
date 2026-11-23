@@ -33,7 +33,9 @@ export async function storiesApi(request,{db,json,fail,body,write,admin,limit}){
   const fields=isAdmin?'id,title,story,username,status,revision':'id,title,story,username';
   const {results}=await db.prepare('SELECT '+fields+' FROM cupid_stories WHERE status=? ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?')
    .bind(status,PAGE_SIZE+1,offset).all();
-  return json({items:results.slice(0,PAGE_SIZE),nextOffset:results.length>PAGE_SIZE?offset+PAGE_SIZE:null});
+  const page={items:results.slice(0,PAGE_SIZE),nextOffset:results.length>PAGE_SIZE?offset+PAGE_SIZE:null};
+  if(!isAdmin)page.total=(await db.prepare('SELECT COUNT(*) AS total FROM cupid_stories WHERE status=?').bind(status).first()).total;
+  return json(page);
  }
 
  const edit=/^\/api\/admin\/stories\/([a-f0-9-]{36})$/.exec(pathname);
