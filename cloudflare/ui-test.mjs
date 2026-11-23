@@ -22,7 +22,7 @@ async function surface(page,url,scripts,{storage={},fetcher}={}){
 }
 function input(w,element,value){element.value=value;element.dispatchEvent(new w.Event('input',{bubbles:true}));}
 test('all public pages expose the same real destinations and a labeled mobile menu',async()=>{
- const expected=['/','/about','/updates','/moments','/cupids'];
+ const expected=['/','/about','/updates','/moments','/about#projects','/cupids'];
  for(const page of ['index.html','about.html','updates.html','moments.html','cupids.html']){const dom=new JSDOM(await readFile(new URL(page,root),'utf8')),d=dom.window.document;assert.deepEqual([...d.querySelectorAll('#site-navigation > a')].map(a=>a.getAttribute('href')),expected);assert.equal(d.querySelector('.menu-toggle').textContent,'Menu');assert.equal(d.querySelectorAll('#site-navigation a[aria-current=page]').length,1);dom.window.close();}
 });
 test('Home keeps bounded highlights and links to the dedicated archive',async()=>{
