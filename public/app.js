@@ -18,6 +18,7 @@ function setRoute(replace=false){const url=new URL(location.href);const record=c
  }
  url.searchParams.delete('clip');url.searchParams.delete('submit');url.hash='';history[replace?'replaceState':'pushState'](null,'',url);shown=24;render();}
 function render(){
+ $('#red-string-credit').hidden=category!=='Red String Theory'||!libraryReady;
  $('#feature-stage').hidden=!!query||category!=='all'||!libraryReady;
  $$('.add-trigger').forEach(button=>button.disabled=!libraryReady);
  if(!libraryReady){$('#clip-grid').replaceChildren();$('#library-more').hidden=true;$('#category-filters').hidden=true;$('#results-note').textContent='';$('#empty-state').hidden=false;$('#empty-title').textContent=libraryError?'The collection couldn’t load.':'Getting the collection ready.';$('#empty-description').textContent=libraryError||'Just a moment…';$('#empty-action').hidden=!libraryError;$('#empty-action').textContent='Try again';return;}

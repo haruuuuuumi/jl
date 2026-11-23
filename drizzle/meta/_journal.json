@@ -57,6 +57,13 @@
       "when": 1795345413514,
       "tag": "0007_cupid_stories",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1795408364228,
+      "tag": "0008_red_string_theory",
+      "breakpoints": true
     }
   ]
 }
