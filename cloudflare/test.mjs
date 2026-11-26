@@ -60,7 +60,10 @@ test('incorrect password attempts are limited per IP',async()=>{
 test('public catalog retains title edits and deletions from database overrides',async()=>{
  const DB=await localD1();try{
  const insert=DB.sqlite.prepare('INSERT INTO catalog_entries (id,source_key,media_key,title,item_json,category_ids,status,revision,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)');baseline.slice(0,4).forEach((item,index)=>insert.run(item.id,'fixture:'+item.id,null,index===3?'Fixture edited title':item.title,JSON.stringify(item),'["just-jeolee"]',index<3?'deleted':'published',1,1,1));
- const response=await app.fetch(req('/api/catalog'),{...baseEnv,DB},context);assert.equal(response.status,200);const data=await response.json();assert.equal(data.items.length,baseline.length-3+17);assert.equal(data.categories.length,5);assert.ok(data.items.some(i=>i.title==='Fixture edited title'));
+ const response=await app.fetch(req('/api/catalog'),{...baseEnv,DB},context);assert.equal(response.status,200);const data=await response.json();assert.equal(data.items.length,baseline.length-3+18);assert.equal(data.categories.length,5);assert.ok(data.items.some(i=>i.title==='Fixture edited title'));
+ const soundtrackClip=data.items.find(item=>item.id==='soundtrack-2125837308876488704');
+ assert.deepEqual(soundtrackClip.collections,['Their soundtrack']);
+ assert.equal(soundtrackClip.sourceUrl,'https://x.com/jeoleemoment/status/2125839841820913760');
  const redString=data.items.filter(i=>i.collections.includes('Red String Theory'));
  assert.equal(redString.length,18);
  assert.equal(new Set(redString.map(item=>item.mediaKey)).size,18);
@@ -97,7 +100,7 @@ test('anonymous video submissions are checked and remain absent from the publish
   globalThis.fetch=async input=>{assert.equal(new URL(input).hostname,'cdn.syndication.twimg.com');return Response.json({__typename:'Tweet',user:{screen_name:'test_cupid',name:'Test Cupid'},mediaDetails:[{type:'video',media_url_https:'https://pbs.twimg.com/amplify_video_thumb/9999999999999999999/img/test.jpg',video_info:{duration_millis:1000,variants:[{content_type:'video/mp4',url:'https://video.twimg.com/test.mp4',bitrate:100000}]}}]});};
   const env={...baseEnv,DB};const response=await app.fetch(req('/api/submissions',null,post({title:'A submitted clip',url:'https://x.com/test_cupid/status/9999999999999999999',categoryId:'fan-edits'})),env,context);assert.equal(response.status,201);assert.equal((await response.json()).status,'pending');
   assert.equal(DB.sqlite.prepare("SELECT COUNT(*) AS n FROM catalog_entries WHERE status='pending'").get().n,1);
-  assert.equal((await (await app.fetch(req('/api/catalog'),env,context)).json()).items.length,baseline.length+17);
+  assert.equal((await (await app.fetch(req('/api/catalog'),env,context)).json()).items.length,baseline.length+18);
  }finally{globalThis.fetch=originalFetch;DB.close();}
 });
 
@@ -113,7 +116,7 @@ async function editClip(env,cookie,id,body){return app.fetch(req('/api/admin/cli
 test('new category suggestions stay private until the admin approves and publishes them with a clip',async()=>{
  const DB=await localD1(),restore=stubSubmissionVideos();try{
   const env={...baseEnv,DB},id=await suggestClip(env,'9999999999999999001','Bandana days');
-  const before=await (await app.fetch(req('/api/catalog'),env,context)).json();assert.equal(before.categories.length,5);assert.equal(before.items.length,baseline.length+17);
+  const before=await (await app.fetch(req('/api/catalog'),env,context)).json();assert.equal(before.categories.length,5);assert.equal(before.items.length,baseline.length+18);
   assert.equal((await editClip(env,'',id,{revision:1,status:'published',newCategoryName:'Bandana days',categoryIds:[]})).status,401);
   const cookie=await login(env),review=await (await app.fetch(req('/api/admin/catalog',null,{headers:{cookie}}),env,context)).json();assert.equal(review.items.find(i=>i.id===id).suggestedCategory,'Bandana days');
   assert.equal((await editClip(env,cookie,id,{revision:1,status:'published'})).status,400);
@@ -150,7 +153,7 @@ test('a concurrent review cannot leave a public category behind without the appr
 test('invalid category suggestions are rejected before video metadata is requested',async()=>{
  const DB=await localD1();try{const env={...baseEnv,DB};
  for(const suggestedCategory of ['', 'x'.repeat(41),'fan edits']){const response=await app.fetch(req('/api/submissions',null,post({title:'Invalid suggestion',url:'https://x.com/test_cupid/status/9999999999999999006',suggestedCategory})),env,context);assert.equal(response.status,400);}
- assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_categories').get().n,1);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_entries').get().n,18);
+ assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_categories').get().n,1);assert.equal(DB.sqlite.prepare('SELECT COUNT(*) AS n FROM catalog_entries').get().n,19);
  }finally{DB.close();}
 });
 
